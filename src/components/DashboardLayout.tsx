@@ -24,6 +24,7 @@ const navigation = [
   { name: 'Proposals', href: '/proposals', icon: FileText },
   { name: 'Jobs', href: '/jobs', icon: Camera },
   { name: 'Customers', href: '/customers', icon: Users },
+  { name: 'Customer Links', href: '/admin/customer-links', icon: Users },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
