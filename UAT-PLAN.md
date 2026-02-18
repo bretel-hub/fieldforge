@@ -44,7 +44,9 @@ Run: `tests/test-proposals-api.ps1`
 - No server errors in response
 
 ### Phase 3: Frontend UI Tests (5 minutes)
-Use browser automation (OpenClaw browser tool)
+Use browser automation (OpenClaw browser tool with `profile="openclaw"`)
+
+**IMPORTANT:** Always use `profile="openclaw"` for automated testing. This launches an isolated browser that requires no manual attachment. Never use `profile="chrome"` for UAT - it requires manual tab connection.
 
 **Test Flow:**
 1. **Navigate** → https://fieldforge-eight.vercel.app/proposals/create
