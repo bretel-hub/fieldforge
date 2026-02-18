@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@vercel/postgres'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -8,33 +8,30 @@ export async function GET(
   try {
     const { id } = params
 
-    // Get proposal
-    const proposalResult = await sql`
-      SELECT * FROM proposals WHERE id = ${id}
-    `
+    // Get proposal with line items
+    const { data: proposal, error } = await supabase
+      .from('proposals')
+      .select(`
+        *,
+        proposal_line_items(*)
+      `)
+      .eq('id', id)
+      .single()
 
-    if (proposalResult.rows.length === 0) {
+    if (error) {
+      console.error('Error fetching proposal:', error)
       return NextResponse.json(
-        { success: false, error: 'Proposal not found' },
-        { status: 404 }
+        { success: false, error: error.message },
+        { status: error.code === 'PGRST116' ? 404 : 500 }
       )
-    }
-
-    // Get line items
-    const itemsResult = await sql`
-      SELECT * FROM proposal_line_items 
-      WHERE proposal_id = ${id}
-      ORDER BY sort_order
-    `
-
-    const proposal = {
-      ...proposalResult.rows[0],
-      items: itemsResult.rows
     }
 
     return NextResponse.json({
       success: true,
-      proposal
+      proposal: {
+        ...proposal,
+        items: proposal.proposal_line_items || []
+      }
     })
 
   } catch (error) {
@@ -64,51 +61,56 @@ export async function PATCH(
     } = body
 
     // Update proposal
-    await sql`
-      UPDATE proposals SET
-        customer_name = ${customer.name},
-        customer_contact = ${customer.contact},
-        customer_email = ${customer.email},
-        customer_address = ${customer.address},
-        project_title = ${projectDetails.title},
-        project_description = ${projectDetails.description},
-        project_location = ${projectDetails.location},
-        project_timeline = ${projectDetails.timeline},
-        status = ${status || 'draft'},
-        subtotal = ${subtotal},
-        tax_amount = ${tax},
-        total = ${total}
-      WHERE id = ${id}
-    `
+    const { error: updateError } = await supabase
+      .from('proposals')
+      .update({
+        customer_name: customer.name,
+        customer_contact: customer.contact,
+        customer_email: customer.email,
+        customer_address: customer.address,
+        project_title: projectDetails.title,
+        project_description: projectDetails.description,
+        project_location: projectDetails.location,
+        project_timeline: projectDetails.timeline,
+        status: status || 'draft',
+        subtotal,
+        tax_amount: tax,
+        total
+      })
+      .eq('id', id)
+
+    if (updateError) {
+      console.error('Error updating proposal:', updateError)
+      return NextResponse.json(
+        { success: false, error: updateError.message },
+        { status: 500 }
+      )
+    }
 
     // Delete existing line items
-    await sql`
-      DELETE FROM proposal_line_items WHERE proposal_id = ${id}
-    `
+    await supabase
+      .from('proposal_line_items')
+      .delete()
+      .eq('proposal_id', id)
 
     // Insert updated line items
     if (items && items.length > 0) {
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i]
-        await sql`
-          INSERT INTO proposal_line_items (
-            proposal_id,
-            category,
-            description,
-            quantity,
-            unit_price,
-            total,
-            sort_order
-          ) VALUES (
-            ${id},
-            ${item.category},
-            ${item.description},
-            ${item.quantity},
-            ${item.unitPrice},
-            ${item.total},
-            ${i}
-          )
-        `
+      const lineItems = items.map((item: any, index: number) => ({
+        proposal_id: id,
+        category: item.category,
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        total: item.total,
+        sort_order: index
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('proposal_line_items')
+        .insert(lineItems)
+
+      if (itemsError) {
+        console.error('Error updating line items:', itemsError)
       }
     }
 
@@ -133,9 +135,18 @@ export async function DELETE(
   try {
     const { id } = params
 
-    await sql`
-      DELETE FROM proposals WHERE id = ${id}
-    `
+    const { error } = await supabase
+      .from('proposals')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting proposal:', error)
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@vercel/postgres'
-import { generateProposalNumber } from '@/lib/db'
+import { supabase, generateProposalNumber } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,64 +18,53 @@ export async function POST(request: NextRequest) {
     const proposalNumber = generateProposalNumber()
 
     // Insert proposal
-    const proposalResult = await sql`
-      INSERT INTO proposals (
-        proposal_number,
-        customer_name,
-        customer_contact,
-        customer_email,
-        customer_address,
-        project_title,
-        project_description,
-        project_location,
-        project_timeline,
+    const { data: proposal, error: proposalError } = await supabase
+      .from('proposals')
+      .insert({
+        proposal_number: proposalNumber,
+        customer_name: customer.name,
+        customer_contact: customer.contact,
+        customer_email: customer.email,
+        customer_address: customer.address,
+        project_title: projectDetails.title,
+        project_description: projectDetails.description,
+        project_location: projectDetails.location,
+        project_timeline: projectDetails.timeline,
         status,
         subtotal,
-        tax_amount,
+        tax_amount: tax,
         total
-      ) VALUES (
-        ${proposalNumber},
-        ${customer.name},
-        ${customer.contact},
-        ${customer.email},
-        ${customer.address},
-        ${projectDetails.title},
-        ${projectDetails.description},
-        ${projectDetails.location},
-        ${projectDetails.timeline},
-        ${status},
-        ${subtotal},
-        ${tax},
-        ${total}
-      )
-      RETURNING *
-    `
+      })
+      .select()
+      .single()
 
-    const proposal = proposalResult.rows[0]
+    if (proposalError) {
+      console.error('Error creating proposal:', proposalError)
+      return NextResponse.json(
+        { success: false, error: proposalError.message },
+        { status: 500 }
+      )
+    }
 
     // Insert line items
     if (items && items.length > 0) {
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i]
-        await sql`
-          INSERT INTO proposal_line_items (
-            proposal_id,
-            category,
-            description,
-            quantity,
-            unit_price,
-            total,
-            sort_order
-          ) VALUES (
-            ${proposal.id},
-            ${item.category},
-            ${item.description},
-            ${item.quantity},
-            ${item.unitPrice},
-            ${item.total},
-            ${i}
-          )
-        `
+      const lineItems = items.map((item: any, index: number) => ({
+        proposal_id: proposal.id,
+        category: item.category,
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        total: item.total,
+        sort_order: index
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('proposal_line_items')
+        .insert(lineItems)
+
+      if (itemsError) {
+        console.error('Error creating line items:', itemsError)
+        // Don't fail the whole request, just log it
       }
     }
 
@@ -97,19 +85,25 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const result = await sql`
-      SELECT 
-        p.*,
-        COUNT(pli.id) as line_item_count
-      FROM proposals p
-      LEFT JOIN proposal_line_items pli ON p.id = pli.proposal_id
-      GROUP BY p.id
-      ORDER BY p.created_at DESC
-    `
+    const { data: proposals, error } = await supabase
+      .from('proposals')
+      .select(`
+        *,
+        proposal_line_items(count)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching proposals:', error)
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
-      proposals: result.rows
+      proposals
     })
 
   } catch (error) {
