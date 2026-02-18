@@ -2,6 +2,25 @@
 
 ## Testing Workflow
 
+**Jimmy's Automated Workflow:**
+1. Check latest deployment status (GitHub + Vercel)
+2. Run backend API tests
+3. Run frontend UI tests (browser automation)
+4. Verify database records (Supabase)
+5. Report results to Bret
+
+### 0. Check Deployment Status (GitHub Skill)
+```powershell
+# Check latest commits
+gh api repos/bretel-hub/fieldforge/commits?per_page=5
+
+# View recent pushes
+gh repo view bretel-hub/fieldforge --json pushedAt,url
+
+# Check if code is up-to-date
+gh api repos/bretel-hub/fieldforge/commits/main
+```
+
 ### 1. Backend API Testing (First)
 Test API endpoints directly before touching the UI.
 
