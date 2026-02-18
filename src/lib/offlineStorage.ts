@@ -113,7 +113,7 @@ interface FieldForgeDB extends DBSchema {
     value: StoredTask
     indexes: {
       'by-job': string
-      'by-completed': boolean
+      'by-completed': number
       'by-sync-status': string
     }
   }
@@ -417,7 +417,7 @@ class OfflineStorageService {
   async getAppState<T>(key: string): Promise<T | undefined> {
     await this.ensureInit()
     const result = await this.db!.get('app_state', key)
-    return result?.value
+    return result?.value as T | undefined
   }
 
   // === SYNC OPERATIONS ===
@@ -446,17 +446,18 @@ class OfflineStorageService {
 
         if (item.type === 'photo') {
           // Handle photo uploads with FormData
+          const photoData = item.data as StoredPhoto
           const formData = new FormData()
-          formData.append('file', item.data.blob, item.data.fileName)
-          formData.append('jobId', item.data.jobId || '')
-          formData.append('taskId', item.data.taskId || '')
-          formData.append('capturedAt', item.data.capturedAt)
+          formData.append('file', photoData.blob, photoData.fileName)
+          formData.append('jobId', photoData.jobId || '')
+          formData.append('taskId', photoData.taskId || '')
+          formData.append('capturedAt', photoData.capturedAt)
           
-          if (item.data.location) {
-            formData.append('latitude', item.data.location.latitude.toString())
-            formData.append('longitude', item.data.location.longitude.toString())
-            if (item.data.location.accuracy) {
-              formData.append('accuracy', item.data.location.accuracy.toString())
+          if (photoData.location) {
+            formData.append('latitude', photoData.location.latitude.toString())
+            formData.append('longitude', photoData.location.longitude.toString())
+            if (photoData.location.accuracy) {
+              formData.append('accuracy', photoData.location.accuracy.toString())
             }
           }
           
@@ -565,11 +566,12 @@ class OfflineStorageService {
   async clearAllData(): Promise<void> {
     await this.ensureInit()
     
-    const stores: (keyof FieldForgeDB)[] = ['jobs', 'tasks', 'customers', 'photos', 'sync_queue', 'app_state']
-    
-    for (const store of stores) {
-      await this.db!.clear(store)
-    }
+    await this.db!.clear('jobs')
+    await this.db!.clear('tasks')
+    await this.db!.clear('customers')
+    await this.db!.clear('photos')
+    await this.db!.clear('sync_queue')
+    await this.db!.clear('app_state')
     
     console.log('All offline data cleared')
   }

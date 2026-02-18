@@ -1,3 +1,5 @@
+'use client'
+
 import { WifiOff, RefreshCw, Camera, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
