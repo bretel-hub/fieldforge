@@ -9,7 +9,7 @@ export default function ProposalsPage() {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Proposals</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Build Proposal</h1>
             <p className="text-muted-foreground">
               Create and manage sales proposals for your customers
             </p>
