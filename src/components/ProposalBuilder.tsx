@@ -136,18 +136,6 @@ export function ProposalBuilder() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Company Name
-            </label>
-            <input
-              type="text"
-              value={customer.name}
-              onChange={(e) => setCustomer({...customer, name: e.target.value})}
-              className="w-full rounded-md border-gray-300 shadow-sm"
-              placeholder="ABC Manufacturing"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
               Contact Person
             </label>
             <input
@@ -180,6 +168,18 @@ export function ProposalBuilder() {
               onChange={(e) => setCustomer({...customer, address: e.target.value})}
               className="w-full rounded-md border-gray-300 shadow-sm"
               placeholder="123 Business St, City, ST 12345"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Company Name
+            </label>
+            <input
+              type="text"
+              value={customer.name}
+              onChange={(e) => setCustomer({...customer, name: e.target.value})}
+              className="w-full rounded-md border-gray-300 shadow-sm"
+              placeholder="ABC Manufacturing"
             />
           </div>
         </div>
@@ -219,18 +219,6 @@ export function ProposalBuilder() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Location
-            </label>
-            <input
-              type="text"
-              value={projectDetails.location}
-              onChange={(e) => setProjectDetails({...projectDetails, location: e.target.value})}
-              className="w-full rounded-md border-gray-300 shadow-sm"
-              placeholder="Main facility & warehouse"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
               Timeline
             </label>
             <input
@@ -249,7 +237,7 @@ export function ProposalBuilder() {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center">
             <DollarSign className="h-5 w-5 text-gray-400 mr-2" />
-            <h2 className="text-lg font-medium text-gray-900">Line Items</h2>
+            <h2 className="text-lg font-medium text-gray-900">Items for Project</h2>
           </div>
         </div>
 
@@ -265,8 +253,8 @@ export function ProposalBuilder() {
                   <option value="Labor">Labor</option>
                   <option value="Materials">Materials</option>
                   <option value="Equipment">Equipment</option>
-                  <option value="Permits">Permits</option>
                   <option value="Other">Other</option>
+                  <option value="Permits">Permits</option>
                 </select>
                 <button
                   onClick={() => removeLineItem(item.id)}
@@ -299,9 +287,10 @@ export function ProposalBuilder() {
                   <input
                     type="number"
                     step="0.01"
-                    value={item.unitPrice}
+                    value={item.unitPrice || ''}
                     onChange={(e) => updateLineItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
                     className="w-full text-sm rounded-md border-gray-300"
+                    placeholder="0.00"
                   />
                 </div>
                 <div>
