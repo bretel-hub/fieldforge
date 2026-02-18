@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Plus, X, DollarSign, Package, Building2 } from 'lucide-react'
 
 interface LineItem {
@@ -31,6 +32,10 @@ export function ProposalBuilder() {
   const [subtotal, setSubtotal] = useState(0)
   const [tax, setTax] = useState(0)
   const [total, setTotal] = useState(0)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  const router = useRouter()
 
   const recalculate = (updatedItems: LineItem[]) => {
     const newSubtotal = updatedItems.reduce((sum, item) => sum + item.total, 0)
@@ -72,6 +77,43 @@ export function ProposalBuilder() {
     const updatedItems = items.filter(item => item.id !== itemId)
     setItems(updatedItems)
     recalculate(updatedItems)
+  }
+
+  const handleSave = async (status: 'draft' | 'sent' = 'draft') => {
+    setSaving(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/proposals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customer,
+          projectDetails,
+          items,
+          subtotal,
+          tax,
+          total,
+          status,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Redirect to proposals list
+        router.push('/proposals')
+      } else {
+        setError(data.error || 'Failed to save proposal')
+      }
+    } catch (err) {
+      setError('An error occurred while saving the proposal')
+      console.error(err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const formatCurrency = (amount: number) => {
@@ -299,17 +341,35 @@ export function ProposalBuilder() {
         </div>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {error}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-        <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-          Save as Draft
+        <button 
+          onClick={() => handleSave('draft')}
+          disabled={saving}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? 'Saving...' : 'Save as Draft'}
         </button>
         <div className="flex space-x-3">
-          <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+          <button 
+            onClick={() => alert('Preview modal coming soon!')}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
             Preview
           </button>
-          <button className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500">
-            Send Proposal
+          <button 
+            onClick={() => handleSave('sent')}
+            disabled={saving}
+            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Sending...' : 'Send Proposal'}
           </button>
         </div>
       </div>
