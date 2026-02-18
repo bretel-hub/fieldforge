@@ -3,7 +3,14 @@ import { supabase, generateProposalNumber } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[API] Proposal POST request received')
     const body = await request.json()
+    console.log('[API] Request body parsed:', { 
+      hasCustomer: !!body.customer,
+      hasProjectDetails: !!body.projectDetails,
+      itemsCount: body.items?.length || 0
+    })
+    
     const {
       customer,
       projectDetails,
@@ -16,8 +23,10 @@ export async function POST(request: NextRequest) {
 
     // Generate proposal number
     const proposalNumber = generateProposalNumber()
+    console.log('[API] Generated proposal number:', proposalNumber)
 
     // Insert proposal
+    console.log('[API] Attempting to insert proposal...')
     const { data: proposal, error: proposalError } = await supabase
       .from('proposals')
       .insert({
