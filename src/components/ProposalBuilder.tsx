@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, X, DollarSign, Package, Users, Building2 } from 'lucide-react'
+import { Plus, X, DollarSign, Package, Building2 } from 'lucide-react'
 
 interface LineItem {
   id: string
@@ -9,15 +9,6 @@ interface LineItem {
   description: string
   quantity: number
   unitPrice: number
-  total: number
-}
-
-interface ProposalTier {
-  name: 'good' | 'better' | 'best'
-  label: string
-  items: LineItem[]
-  subtotal: number
-  tax: number
   total: number
 }
 
@@ -36,34 +27,20 @@ export function ProposalBuilder() {
     timeline: '',
   })
 
-  const [tiers, setTiers] = useState<ProposalTier[]>([
-    {
-      name: 'good',
-      label: 'Essential Package',
-      items: [],
-      subtotal: 0,
-      tax: 0,
-      total: 0,
-    },
-    {
-      name: 'better',
-      label: 'Professional Package',
-      items: [],
-      subtotal: 0,
-      tax: 0,
-      total: 0,
-    },
-    {
-      name: 'best',
-      label: 'Premium Package',
-      items: [],
-      subtotal: 0,
-      tax: 0,
-      total: 0,
-    },
-  ])
+  const [items, setItems] = useState<LineItem[]>([])
+  const [subtotal, setSubtotal] = useState(0)
+  const [tax, setTax] = useState(0)
+  const [total, setTotal] = useState(0)
 
-  const addLineItem = (tierIndex: number) => {
+  const recalculate = (updatedItems: LineItem[]) => {
+    const newSubtotal = updatedItems.reduce((sum, item) => sum + item.total, 0)
+    const newTax = newSubtotal * 0.0875
+    setSubtotal(newSubtotal)
+    setTax(newTax)
+    setTotal(newSubtotal + newTax)
+  }
+
+  const addLineItem = () => {
     const newItem: LineItem = {
       id: `item-${Date.now()}`,
       category: 'Labor',
@@ -72,43 +49,29 @@ export function ProposalBuilder() {
       unitPrice: 0,
       total: 0,
     }
-    
-    const updatedTiers = [...tiers]
-    updatedTiers[tierIndex].items.push(newItem)
-    setTiers(updatedTiers)
+    const updatedItems = [...items, newItem]
+    setItems(updatedItems)
   }
 
-  const updateLineItem = (tierIndex: number, itemId: string, field: keyof LineItem, value: any) => {
-    const updatedTiers = [...tiers]
-    const item = updatedTiers[tierIndex].items.find(item => item.id === itemId)
-    
-    if (item) {
-      (item as any)[field] = value
-      if (field === 'quantity' || field === 'unitPrice') {
-        item.total = item.quantity * item.unitPrice
+  const updateLineItem = (itemId: string, field: keyof LineItem, value: any) => {
+    const updatedItems = items.map(item => {
+      if (item.id === itemId) {
+        const updated = { ...item, [field]: value }
+        if (field === 'quantity' || field === 'unitPrice') {
+          updated.total = updated.quantity * updated.unitPrice
+        }
+        return updated
       }
-      
-      // Recalculate tier totals
-      const tier = updatedTiers[tierIndex]
-      tier.subtotal = tier.items.reduce((sum, item) => sum + item.total, 0)
-      tier.tax = tier.subtotal * 0.0875 // 8.75% tax
-      tier.total = tier.subtotal + tier.tax
-    }
-    
-    setTiers(updatedTiers)
+      return item
+    })
+    setItems(updatedItems)
+    recalculate(updatedItems)
   }
 
-  const removeLineItem = (tierIndex: number, itemId: string) => {
-    const updatedTiers = [...tiers]
-    updatedTiers[tierIndex].items = updatedTiers[tierIndex].items.filter(item => item.id !== itemId)
-    
-    // Recalculate tier totals
-    const tier = updatedTiers[tierIndex]
-    tier.subtotal = tier.items.reduce((sum, item) => sum + item.total, 0)
-    tier.tax = tier.subtotal * 0.0875
-    tier.total = tier.subtotal + tier.tax
-    
-    setTiers(updatedTiers)
+  const removeLineItem = (itemId: string) => {
+    const updatedItems = items.filter(item => item.id !== itemId)
+    setItems(updatedItems)
+    recalculate(updatedItems)
   }
 
   const formatCurrency = (amount: number) => {
@@ -120,7 +83,7 @@ export function ProposalBuilder() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full">
       {/* Customer Information */}
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex items-center mb-4">
@@ -239,115 +202,100 @@ export function ProposalBuilder() {
         </div>
       </div>
 
-      {/* Good-Better-Best Tiers */}
-      <div className="space-y-6">
-        <div className="flex items-center">
-          <DollarSign className="h-5 w-5 text-gray-400 mr-2" />
-          <h2 className="text-lg font-medium text-gray-900">Proposal Options</h2>
+      {/* Line Items - Full Width */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center">
+            <DollarSign className="h-5 w-5 text-gray-400 mr-2" />
+            <h2 className="text-lg font-medium text-gray-900">Line Items</h2>
+          </div>
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {tiers.map((tier, tierIndex) => (
-            <div key={tier.name} className={`bg-white shadow rounded-lg overflow-hidden ${tier.name === 'better' ? 'ring-2 ring-blue-500' : ''}`}>
-              <div className={`px-6 py-4 ${tier.name === 'good' ? 'bg-gray-50' : tier.name === 'better' ? 'bg-blue-50' : 'bg-green-50'}`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-900">{tier.label}</h3>
-                  {tier.name === 'better' && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      Recommended
-                    </span>
-                  )}
-                </div>
-              </div>
-              
-              <div className="p-6 space-y-4">
-                {tier.items.map((item) => (
-                  <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <select
-                        value={item.category}
-                        onChange={(e) => updateLineItem(tierIndex, item.id, 'category', e.target.value)}
-                        className="text-sm rounded-md border-gray-300"
-                      >
-                        <option value="Labor">Labor</option>
-                        <option value="Materials">Materials</option>
-                        <option value="Equipment">Equipment</option>
-                        <option value="Permits">Permits</option>
-                        <option value="Other">Other</option>
-                      </select>
-                      <button
-                        onClick={() => removeLineItem(tierIndex, item.id)}
-                        className="text-red-600 hover:text-red-500"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                    
-                    <textarea
-                      rows={2}
-                      value={item.description}
-                      onChange={(e) => updateLineItem(tierIndex, item.id, 'description', e.target.value)}
-                      className="w-full text-sm rounded-md border-gray-300 mb-2"
-                      placeholder="Item description..."
-                    />
-                    
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Qty</label>
-                        <input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => updateLineItem(tierIndex, item.id, 'quantity', parseInt(e.target.value) || 0)}
-                          className="w-full text-sm rounded-md border-gray-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Unit Price</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={item.unitPrice}
-                          onChange={(e) => updateLineItem(tierIndex, item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                          className="w-full text-sm rounded-md border-gray-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Total</label>
-                        <div className="text-sm font-medium py-2">
-                          {formatCurrency(item.total)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                <button
-                  onClick={() => addLineItem(tierIndex)}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:text-gray-700 hover:border-gray-400"
+
+        <div className="p-6 space-y-4">
+          {items.map((item) => (
+            <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <select
+                  value={item.category}
+                  onChange={(e) => updateLineItem(item.id, 'category', e.target.value)}
+                  className="text-sm rounded-md border-gray-300"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Line Item
+                  <option value="Labor">Labor</option>
+                  <option value="Materials">Materials</option>
+                  <option value="Equipment">Equipment</option>
+                  <option value="Permits">Permits</option>
+                  <option value="Other">Other</option>
+                </select>
+                <button
+                  onClick={() => removeLineItem(item.id)}
+                  className="text-red-600 hover:text-red-500"
+                >
+                  <X className="h-4 w-4" />
                 </button>
               </div>
               
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>{formatCurrency(tier.subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tax (8.75%):</span>
-                    <span>{formatCurrency(tier.tax)}</span>
-                  </div>
-                  <div className="flex justify-between font-medium text-base border-t border-gray-200 pt-2">
-                    <span>Total:</span>
-                    <span>{formatCurrency(tier.total)}</span>
+              <textarea
+                rows={2}
+                value={item.description}
+                onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
+                className="w-full text-sm rounded-md border-gray-300 mb-2"
+                placeholder="Item description..."
+              />
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Qty</label>
+                  <input
+                    type="number"
+                    value={item.quantity}
+                    onChange={(e) => updateLineItem(item.id, 'quantity', parseInt(e.target.value) || 0)}
+                    className="w-full text-sm rounded-md border-gray-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Unit Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={item.unitPrice}
+                    onChange={(e) => updateLineItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                    className="w-full text-sm rounded-md border-gray-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Total</label>
+                  <div className="text-sm font-medium py-2">
+                    {formatCurrency(item.total)}
                   </div>
                 </div>
               </div>
             </div>
           ))}
+          
+          <button
+            onClick={() => addLineItem()}
+            className="w-full flex items-center justify-center px-4 py-3 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:text-gray-700 hover:border-gray-400"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Line Item
+          </button>
+        </div>
+
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="space-y-2 text-sm max-w-xs ml-auto">
+            <div className="flex justify-between">
+              <span>Subtotal:</span>
+              <span>{formatCurrency(subtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Tax (8.75%):</span>
+              <span>{formatCurrency(tax)}</span>
+            </div>
+            <div className="flex justify-between font-medium text-base border-t border-gray-200 pt-2">
+              <span>Total:</span>
+              <span>{formatCurrency(total)}</span>
+            </div>
+          </div>
         </div>
       </div>
 
