@@ -1,0 +1,19 @@
+{
+  "name": "FieldForge - Field Service Management",
+  "short_name": "FieldForge",
+  "description": "Complete field service management solution with photo documentation and offline capabilities",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
