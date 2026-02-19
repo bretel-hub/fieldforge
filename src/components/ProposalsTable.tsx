@@ -133,6 +133,26 @@ export function ProposalsTable() {
         )
         if (newStatus === 'approved') {
           const jobId = `JOB-${proposal.id}`
+
+          // Fetch full proposal to get description, location, timeline
+          let projectDescription = ''
+          let projectLocation = proposal.customer_address
+          let projectTimeline = ''
+          try {
+            const fullRes = await fetch(`/api/proposals/${proposal.id}`)
+            const fullData = await fullRes.json()
+            if (fullData.success && fullData.proposal) {
+              projectDescription = [
+                fullData.proposal.project_description,
+                fullData.proposal.project_timeline ? `Timeline: ${fullData.proposal.project_timeline}` : '',
+              ].filter(Boolean).join('\n\n')
+              projectLocation = fullData.proposal.project_location || proposal.customer_address
+              projectTimeline = fullData.proposal.project_timeline || ''
+            }
+          } catch {
+            // non-fatal — proceed with basic data
+          }
+
           await offlineStorage.saveJob({
             id: jobId,
             jobNumber: `JOB-${proposal.proposal_number}`,
@@ -143,8 +163,9 @@ export function ProposalsTable() {
             technicianId: 'unassigned',
             scheduledDate: new Date().toISOString().split('T')[0],
             value: proposal.total,
-            location: { address: proposal.customer_address },
-            description: '',
+            location: { address: projectLocation },
+            description: projectDescription,
+            notes: projectTimeline ? `Timeline: ${projectTimeline}` : undefined,
             syncStatus: 'pending',
           })
           setShowConfetti(true)

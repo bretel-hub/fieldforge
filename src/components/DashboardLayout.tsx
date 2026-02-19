@@ -9,8 +9,8 @@ import {
   Settings,
   Menu,
   X,
-  Plus,
-  Handshake
+  Handshake,
+  Briefcase
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -24,6 +24,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Proposals', href: '/proposals', icon: FileText },
   { name: 'Jobs', href: '/jobs', icon: Camera },
+  { name: 'Projects', href: '/projects', icon: Briefcase },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Partners', href: '/partners', icon: Handshake },
   { name: 'Customer Links', href: '/admin/customer-links', icon: Users },
@@ -128,16 +129,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
-              {pathname === '/proposals' && (
-                <Link
-                  href="/proposals/create"
-                  className="flex items-center gap-x-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
-                >
-                  <Plus className="h-4 w-4" />
-                  New Proposal
-                </Link>
-              )}
-              
               {/* User menu placeholder */}
               <div className="h-8 w-8 rounded-full bg-gray-300" />
             </div>
