@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Edit, Trash2 } from 'lucide-react'
 
@@ -13,6 +14,7 @@ interface Partner {
 }
 
 export function PartnersTable() {
+  const router = useRouter()
   const [partners, setPartners] = useState<Partner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -99,7 +101,11 @@ export function PartnersTable() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {partners.map((partner) => (
-                <tr key={partner.id} className="hover:bg-gray-50">
+                <tr
+                  key={partner.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => router.push(`/partners/${partner.id}/edit`)}
+                >
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900">{partner.name}</div>
                     {partner.company_name && (
@@ -114,7 +120,7 @@ export function PartnersTable() {
                       <div className="text-sm text-gray-500">{partner.email}</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/partners/${partner.id}/edit`}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Edit, Download, Mail, Trash2 } from 'lucide-react'
 import { ProposalPreview } from '@/components/ProposalPreview'
@@ -60,6 +61,7 @@ const formatCurrency = (amount: number) => {
 
 
 export function ProposalsTable() {
+  const router = useRouter()
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -280,16 +282,18 @@ export function ProposalsTable() {
                 </tr>
               )}
               {filteredProposals.map((proposal) => (
-                <tr key={proposal.id} className="hover:bg-gray-50">
+                <tr
+                  key={proposal.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => router.push(`/proposals/${proposal.id}/edit`)}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Link href={`/proposals/${proposal.id}/edit`} className="group">
-                      <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
-                        {proposal.proposal_number}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {proposal.project_title}
-                      </div>
-                    </Link>
+                    <div className="text-sm font-medium text-gray-900">
+                      {proposal.proposal_number}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {proposal.project_title}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900">
@@ -302,7 +306,7 @@ export function ProposalsTable() {
                       {formatCurrency(proposal.total)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                     <select
                       value={proposal.status}
                       onChange={(e) => handleStatusChange(proposal, e.target.value)}
@@ -315,7 +319,7 @@ export function ProposalsTable() {
                       <option value="declined">Declined</option>
                     </select>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/proposals/${proposal.id}/edit`}
