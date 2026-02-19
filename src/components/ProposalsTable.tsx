@@ -1,59 +1,18 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Eye, Edit, MoreHorizontal, Download, Send } from 'lucide-react'
 
-const proposals = [
-  {
-    id: 'PROP-001',
-    customer: 'ABC Manufacturing',
-    title: 'Security System Upgrade',
-    value: 45300,
-    status: 'pending',
-    created: '2026-02-12',
-    lastViewed: '2026-02-15 14:30',
-    viewCount: 3,
-  },
-  {
-    id: 'PROP-002', 
-    customer: 'Downtown Office Complex',
-    title: 'HVAC Installation - 3 Floors',
-    value: 78500,
-    status: 'viewed',
-    created: '2026-02-08',
-    lastViewed: '2026-02-14 09:15',
-    viewCount: 7,
-  },
-  {
-    id: 'PROP-003',
-    customer: 'Riverside Restaurant',
-    title: 'Kitchen Electrical Work',
-    value: 12400,
-    status: 'signed',
-    created: '2026-02-13',
-    lastViewed: '2026-02-15 11:45',
-    viewCount: 2,
-  },
-  {
-    id: 'PROP-004',
-    customer: 'Metro Health Clinic', 
-    title: 'Network Infrastructure Setup',
-    value: 32100,
-    status: 'draft',
-    created: '2026-02-10',
-    lastViewed: null,
-    viewCount: 0,
-  },
-  {
-    id: 'PROP-005',
-    customer: 'Greenfield Apartments',
-    title: 'Building Security Cameras',
-    value: 23800,
-    status: 'declined',
-    created: '2026-02-05',
-    lastViewed: '2026-02-07 16:20',
-    viewCount: 1,
-  },
-]
+interface Proposal {
+  id: string
+  proposal_number: string
+  customer_name: string
+  project_title: string
+  total: number
+  status: string
+  created_at: string
+  viewed_at?: string | null
+}
 
 const statusStyles = {
   draft: 'bg-gray-100 text-gray-800',
@@ -83,6 +42,56 @@ const formatDate = (dateString: string | null) => {
 }
 
 export function ProposalsTable() {
+  const [proposals, setProposals] = useState<Proposal[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchProposals() {
+      try {
+        const response = await fetch('/api/proposals')
+        const data = await response.json()
+        
+        if (data.success) {
+          setProposals(data.proposals)
+        } else {
+          setError(data.error || 'Failed to load proposals')
+        }
+      } catch (err) {
+        setError('An error occurred while loading proposals')
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProposals()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="bg-white shadow rounded-lg p-12 text-center">
+        <div className="text-gray-500">Loading proposals...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white shadow rounded-lg p-12 text-center">
+        <div className="text-red-600">{error}</div>
+      </div>
+    )
+  }
+
+  if (proposals.length === 0) {
+    return (
+      <div className="bg-white shadow rounded-lg p-12 text-center">
+        <div className="text-gray-500">No proposals yet. Create your first one!</div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
@@ -136,19 +145,19 @@ export function ProposalsTable() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
                     <div className="text-sm font-medium text-gray-900">
-                      {proposal.id}
+                      {proposal.proposal_number}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {proposal.title}
+                      {proposal.project_title}
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{proposal.customer}</div>
+                  <div className="text-sm text-gray-900">{proposal.customer_name}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(proposal.value)}
+                    {formatCurrency(proposal.total)}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -160,10 +169,10 @@ export function ProposalsTable() {
                   <div>
                     <div className="flex items-center">
                       <Eye className="h-4 w-4 mr-1" />
-                      {proposal.viewCount} views
+                      0 views
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      Last: {formatDate(proposal.lastViewed)}
+                      Last: {formatDate(proposal.viewed_at)}
                     </div>
                   </div>
                 </td>
@@ -192,7 +201,7 @@ export function ProposalsTable() {
       <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing 5 of 23 proposals
+            Showing {proposals.length} {proposals.length === 1 ? 'proposal' : 'proposals'}
           </div>
           <div className="flex items-center space-x-2">
             <button className="px-3 py-1 text-sm border rounded-md disabled:opacity-50" disabled>
