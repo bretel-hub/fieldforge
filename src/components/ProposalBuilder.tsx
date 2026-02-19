@@ -66,7 +66,7 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
   const addLineItem = () => {
     const newItem: LineItem = {
       id: `item-${Date.now()}`,
-      category: 'Labor',
+      category: 'Materials',
       description: '',
       quantity: 1,
       unitPrice: 0,
@@ -309,11 +309,11 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
                   onChange={(e) => updateLineItem(item.id, 'category', e.target.value)}
                   className="text-sm rounded-md border-gray-300"
                 >
-                  <option value="Labor">Labor</option>
                   <option value="Materials">Materials</option>
+                  <option value="Labor">Labor</option>
                   <option value="Equipment">Equipment</option>
-                  <option value="Other">Other</option>
                   <option value="Permits">Permits</option>
+                  <option value="Other">Other</option>
                 </select>
                 <button
                   onClick={() => removeLineItem(item.id)}
@@ -421,6 +421,12 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
           </div>
           <div className="flex space-x-3">
             <button
+              onClick={() => router.push('/proposals')}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
               onClick={() => setShowPreview(true)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
@@ -438,25 +444,24 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
       ) : (
         <div className="flex items-center justify-between pt-6 border-t border-gray-200">
           <button
-            onClick={() => handleSave('draft')}
-            disabled={saving}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => router.push('/proposals')}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
           >
-            {saving ? 'Saving...' : 'Save as Draft'}
+            Cancel
           </button>
           <div className="flex space-x-3">
+            <button
+              onClick={() => handleSave('draft')}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Saving...' : 'Save as Draft'}
+            </button>
             <button
               onClick={() => setShowPreview(true)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Preview
-            </button>
-            <button
-              onClick={() => handleSave('pending')}
-              disabled={saving}
-              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Sending...' : 'Send Proposal'}
             </button>
           </div>
         </div>
