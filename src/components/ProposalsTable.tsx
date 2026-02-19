@@ -8,6 +8,7 @@ interface Proposal {
   id: string
   proposal_number: string
   customer_name: string
+  customer_contact: string
   customer_address: string
   project_title: string
   total: number
@@ -155,7 +156,9 @@ export function ProposalsTable() {
                   </Link>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-gray-900">{proposal.customer_name}</div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {proposal.customer_name || proposal.customer_contact}
+                  </div>
                   <div className="text-sm text-gray-500">{proposal.customer_address}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
