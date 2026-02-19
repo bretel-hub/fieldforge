@@ -9,7 +9,8 @@ import {
   Settings,
   Menu,
   X,
-  Handshake
+  Handshake,
+  Briefcase
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Proposals', href: '/proposals', icon: FileText },
   { name: 'Jobs', href: '/jobs', icon: Camera },
+  { name: 'Projects', href: '/projects', icon: Briefcase },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Partners', href: '/partners', icon: Handshake },
   { name: 'Customer Links', href: '/admin/customer-links', icon: Users },

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { PhotoCaptureComponent } from '@/components/PhotoCapture'
-import { Camera, MapPin, Clock, User, CheckCircle } from 'lucide-react'
+import { Camera, MapPin, Clock, User, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PhotoCapture } from '@/lib/cameraService'
+import { offlineStorage, StoredJob } from '@/lib/offlineStorage'
 
 interface JobDetailPageProps {
   params: {
@@ -13,46 +14,85 @@ interface JobDetailPageProps {
   }
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  'not-started': 'Not Started',
+  'scheduled':   'Scheduled',
+  'in-progress': 'In Progress',
+  'complete':    'Complete',
+  'on-hold':     'On Hold',
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  'not-started': 'bg-gray-100 text-gray-800',
+  'scheduled':   'bg-blue-100 text-blue-800',
+  'in-progress': 'bg-yellow-100 text-yellow-800',
+  'complete':    'bg-green-100 text-green-800',
+  'on-hold':     'bg-red-100 text-red-800',
+}
+
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const [showCamera, setShowCamera] = useState(false)
   const [jobPhotos, setJobPhotos] = useState<PhotoCapture[]>([])
+  const [job, setJob] = useState<StoredJob | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Mock job data - in real app this would come from API/database
-  const job = {
-    id: params.id,
-    title: "HVAC System Maintenance",
-    customer: "ABC Manufacturing",
-    address: "123 Industrial Ave, Cityville, ST 12345",
-    status: "in_progress" as const,
-    technicianName: "John Smith",
-    scheduledDate: "2026-02-17",
-    description: "Annual HVAC system maintenance and inspection. Check filters, coils, and refrigerant levels.",
-    tasks: [
-      { id: 1, title: "Inspect air filters", completed: true },
-      { id: 2, title: "Check refrigerant levels", completed: true },
-      { id: 3, title: "Clean evaporator coils", completed: false },
-      { id: 4, title: "Test thermostat calibration", completed: false },
-      { id: 5, title: "Document system performance", completed: false }
-    ]
-  }
+  useEffect(() => {
+    async function loadJob() {
+      try {
+        const stored = await offlineStorage.getJob(params.id)
+        setJob(stored ?? null)
+      } catch (err) {
+        console.error('Failed to load job', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadJob()
+  }, [params.id])
 
   const handlePhotoCapture = (photo: PhotoCapture) => {
-    setJobPhotos(prev => [...prev, photo])
-    console.log('Photo captured:', photo)
+    setJobPhotos((prev) => [...prev, photo])
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'in_progress': return 'bg-blue-100 text-blue-800'
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-32 text-gray-500">
+          <Loader2 className="h-6 w-6 animate-spin mr-3" />
+          Loading job…
+        </div>
+      </DashboardLayout>
+    )
   }
 
-  const completedTasks = job.tasks.filter(task => task.completed).length
-  const totalTasks = job.tasks.length
-  const progressPercentage = (completedTasks / totalTasks) * 100
+  if (!job) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-32 text-gray-500">
+          <p className="text-lg">Job not found.</p>
+          <p className="text-sm mt-1 text-gray-400">ID: {params.id}</p>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  const normalizedStatus = (() => {
+    const s = job.status as string
+    if (s === 'completed' || s === 'completing') return 'complete'
+    if (s === 'starting-soon' || s === 'pending') return 'scheduled'
+    if (s === 'in_progress') return 'in-progress'
+    if (s === 'cancelled') return 'on-hold'
+    return s
+  })()
+
+  const statusLabel = STATUS_LABELS[normalizedStatus] ?? normalizedStatus
+  const statusColor = STATUS_COLORS[normalizedStatus] ?? 'bg-gray-100 text-gray-800'
+
+  const address = job.location?.label
+    ? `${job.location.label}${job.location.address ? ` · ${job.location.address}` : ''}`
+    : job.location?.address ?? '—'
+
+  const photosCount = job.photosCount ?? job.photos?.length ?? jobPhotos.length
 
   return (
     <DashboardLayout>
@@ -63,93 +103,95 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
             <div>
               <div className="flex items-center space-x-3 mb-2">
                 <h1 className="text-3xl font-bold tracking-tight">{job.title}</h1>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(job.status)}`}>
-                  {job.status.replace('_', ' ')}
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}>
+                  {statusLabel}
                 </span>
               </div>
-              
+
+              <p className="text-xs text-gray-400 mb-3">{job.jobNumber ?? job.id}</p>
+
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex items-center">
-                  <User className="h-4 w-4 mr-2" />
-                  {job.customer}
+                  <User className="h-4 w-4 mr-2 shrink-0" />
+                  {job.customerName || 'Unassigned customer'}
+                  {job.technicianName && (
+                    <span className="ml-4 text-gray-400">Technician: {job.technicianName}</span>
+                  )}
                 </div>
                 <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {job.address}
+                  <MapPin className="h-4 w-4 mr-2 shrink-0" />
+                  {address}
                 </div>
                 <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-2" />
-                  {new Date(job.scheduledDate).toLocaleDateString()}
+                  <Clock className="h-4 w-4 mr-2 shrink-0" />
+                  {job.scheduledDate
+                    ? new Date(job.scheduledDate).toLocaleDateString()
+                    : '—'}
+                  {job.estimatedCompletion && (
+                    <span className="ml-2 text-gray-400">
+                      → {new Date(job.estimatedCompletion).toLocaleDateString()}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
-            
-            <Button onClick={() => setShowCamera(true)} className="bg-green-600 hover:bg-green-700">
+
+            <Button onClick={() => setShowCamera(true)} className="bg-green-600 hover:bg-green-700 shrink-0">
               <Camera className="h-4 w-4 mr-2" />
               Take Photo
             </Button>
           </div>
 
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-gray-700">{job.description}</p>
-          </div>
+          {job.description && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <p className="text-gray-700">{job.description}</p>
+            </div>
+          )}
+
+          {job.notes && (
+            <div className="mt-3 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+              <p className="text-xs font-medium text-yellow-700 mb-1 uppercase tracking-wide">Notes</p>
+              <p className="text-sm text-yellow-900">{job.notes}</p>
+            </div>
+          )}
         </div>
 
-        {/* Progress Overview */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Progress Overview</h2>
-            <span className="text-sm text-gray-600">
-              {completedTasks} of {totalTasks} tasks completed
-            </span>
+        {/* Value */}
+        {job.value != null && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-semibold mb-2">Contract Value</h2>
+            <p className="text-3xl font-bold text-green-600">
+              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(job.value)}
+            </p>
           </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-            <div 
-              className="bg-green-600 h-3 rounded-full transition-all duration-300" 
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-          </div>
-          
-          <p className="text-sm text-gray-600">
-            {progressPercentage === 100 ? 'All tasks completed!' : `${Math.round(progressPercentage)}% complete`}
-          </p>
-        </div>
+        )}
 
-        {/* Task List */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Tasks</h2>
-          <div className="space-y-3">
-            {job.tasks.map((task) => (
-              <div key={task.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <CheckCircle 
-                  className={`h-5 w-5 ${task.completed ? 'text-green-600' : 'text-gray-400'}`}
-                />
-                <span className={`flex-1 ${task.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                  {task.title}
-                </span>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => setShowCamera(true)}
-                >
-                  <Camera className="h-3 w-3 mr-1" />
-                  Photo
-                </Button>
-              </div>
-            ))}
+        {/* Progress */}
+        {job.progress != null && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Progress</h2>
+              <span className="text-sm text-gray-600">{job.progress}% complete</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                style={{ width: `${job.progress}%` }}
+              />
+            </div>
+            {job.lastUpdateNote && (
+              <p className="text-xs text-gray-400 mt-2">{job.lastUpdateNote}</p>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Photo Gallery */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Photos</h2>
-            <span className="text-sm text-gray-600">
-              {jobPhotos.length} photos
-            </span>
+            <span className="text-sm text-gray-600">{photosCount + jobPhotos.length} photos</span>
           </div>
-          
+
           {jobPhotos.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Camera className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -182,22 +224,23 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           )}
         </div>
 
-        {/* Offline Status Indicator */}
+        {/* Offline Status */}
         <div className="fixed bottom-4 right-4 z-30">
           <div className={`px-3 py-2 rounded-full text-sm font-medium shadow-lg ${
-            navigator.onLine 
+            typeof navigator !== 'undefined' && navigator.onLine
               ? 'bg-green-100 text-green-800 border border-green-200'
               : 'bg-red-100 text-red-800 border border-red-200'
           }`}>
             <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${navigator.onLine ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span>{navigator.onLine ? 'Online' : 'Offline'}</span>
+              <div className={`w-2 h-2 rounded-full ${
+                typeof navigator !== 'undefined' && navigator.onLine ? 'bg-green-500' : 'bg-red-500'
+              }`} />
+              <span>{typeof navigator !== 'undefined' && navigator.onLine ? 'Online' : 'Offline'}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Camera Modal */}
       {showCamera && (
         <PhotoCaptureComponent
           onPhotoCapture={handlePhotoCapture}

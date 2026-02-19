@@ -2,15 +2,11 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb'
 
 export type JobStatus =
+  | 'not-started'
   | 'scheduled'
-  | 'starting-soon'
   | 'in-progress'
-  | 'completing'
-  | 'completed'
+  | 'complete'
   | 'on-hold'
-  | 'pending'
-  | 'in_progress'
-  | 'cancelled'
 
 export interface StoredJob {
   id: string
