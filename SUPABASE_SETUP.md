@@ -1,13 +1,15 @@
 # Supabase Setup - Final Step
 
-## ✅ Already Done:
+## Already Done:
 - Database created on Supabase
 - Environment variables configured in Vercel
 - Supabase client installed
 - API routes updated to use Supabase
 - Code committed and pushed
 
-## 🎯 Last Step: Create Tables
+## Last Step: Create Tables
+
+### Fresh Setup (no tables yet)
 
 1. **Open Supabase SQL Editor**:
    - Go to: https://supabase.com/dashboard/project/wxnrlzrtnkwjtpjifvyj/sql/new
@@ -24,25 +26,43 @@
 
 4. **Verify**:
    - Click "Table Editor" in the left sidebar
-   - You should see 3 new tables:
+   - You should see 5 tables:
      - `customers`
      - `proposals`
      - `proposal_line_items`
+     - `partners`
+     - `partner_costs`
 
-## 🚀 Test It!
+### Existing Setup (already have customers/proposals tables, missing partners)
+
+If you set up the database before the Partners feature was added, run only the partners migration:
+
+1. **Open Supabase SQL Editor**:
+   - Go to: https://supabase.com/dashboard/project/wxnrlzrtnkwjtpjifvyj/sql/new
+
+2. **Copy and run the partners migration**:
+   - Open `db/migrations/001_add_partners.sql`
+   - Copy all the content, paste into SQL Editor, and click **"Run"**
+
+3. **Verify**:
+   - Click "Table Editor" and confirm `partners` and `partner_costs` tables now appear
+
+## Test It!
 
 Once the tables are created:
-1. Go to https://fieldforge-eight.vercel.app/proposals/create
-2. Fill out the form and add some line items
-3. Click **"Save as Draft"**
-4. You should be redirected to `/proposals` 
-5. Check Supabase Table Editor to see your saved proposal!
+1. Go to https://fieldforge-eight.vercel.app/partners/create
+2. Fill out the partner form
+3. Click **"Save Partner"**
+4. You will be redirected to `/partners` and see the new partner in the list
 
 ## Troubleshooting
 
-If you get an error, make sure:
-- You copied the ENTIRE schema.sql file
-- You clicked "Run" after pasting
-- There are no syntax errors shown in red
+If you get "Could not find the table 'public.partners' in the schema cache":
+- The `partners` table has not been created in your Supabase project yet
+- Follow the "Existing Setup" steps above to run `db/migrations/001_add_partners.sql`
+- The schema is safe to run multiple times (it uses `IF NOT EXISTS`)
 
-The schema is safe to run multiple times (it uses `IF NOT EXISTS`).
+If you get an error running the schema:
+- Make sure you copied the ENTIRE file
+- Make sure you clicked "Run" after pasting
+- Check for any red syntax error indicators
