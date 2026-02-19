@@ -172,7 +172,7 @@ export function ProposalsTable() {
                       0 views
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      Last: {formatDate(proposal.viewed_at)}
+                      Last: {formatDate(proposal.viewed_at || null)}
                     </div>
                   </div>
                 </td>
