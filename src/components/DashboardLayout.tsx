@@ -1,15 +1,16 @@
 'use client'
 
 import { ReactNode, useState } from 'react'
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Camera, 
-  Users, 
+import {
+  LayoutDashboard,
+  FileText,
+  Camera,
+  Users,
   Settings,
   Menu,
   X,
-  Plus
+  Plus,
+  Handshake
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Proposals', href: '/proposals', icon: FileText },
   { name: 'Jobs', href: '/jobs', icon: Camera },
   { name: 'Customers', href: '/customers', icon: Users },
+  { name: 'Partners', href: '/partners', icon: Handshake },
   { name: 'Customer Links', href: '/admin/customer-links', icon: Users },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
