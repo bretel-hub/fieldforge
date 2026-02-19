@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, X, DollarSign, Package, Building2 } from 'lucide-react'
 import { offlineStorage } from '@/lib/offlineStorage'
+import { ProposalPreview } from '@/components/ProposalPreview'
 
 interface LineItem {
   id: string
@@ -45,6 +46,7 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedStatus, setSelectedStatus] = useState(initialStatus ?? 'draft')
+  const [showPreview, setShowPreview] = useState(false)
 
   const router = useRouter()
   const isEditing = Boolean(proposalId)
@@ -388,7 +390,7 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
           </div>
           <div className="flex space-x-3">
             <button
-              onClick={() => alert('Preview modal coming soon!')}
+              onClick={() => setShowPreview(true)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Preview
@@ -413,7 +415,7 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
           </button>
           <div className="flex space-x-3">
             <button
-              onClick={() => alert('Preview modal coming soon!')}
+              onClick={() => setShowPreview(true)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Preview
@@ -427,6 +429,20 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
             </button>
           </div>
         </div>
+      )}
+
+      {/* PDF Preview Modal */}
+      {showPreview && (
+        <ProposalPreview
+          proposalNumber={proposalNumber}
+          customer={customer}
+          projectDetails={projectDetails}
+          items={items}
+          subtotal={subtotal}
+          tax={tax}
+          total={total}
+          onClose={() => setShowPreview(false)}
+        />
       )}
     </div>
   )
