@@ -49,7 +49,7 @@ export function ProposalsTable() {
   useEffect(() => {
     async function fetchProposals() {
       try {
-        const response = await fetch('/api/proposals')
+        const response = await fetch('/api/proposals', { cache: 'no-store' })
         const data = await response.json()
         
         if (data.success) {

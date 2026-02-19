@@ -103,7 +103,8 @@ export function ProposalBuilder() {
       const data = await response.json()
 
       if (data.success) {
-        // Redirect to proposals list
+        // Invalidate the router cache so the proposals list re-fetches on arrival
+        router.refresh()
         router.push('/proposals')
       } else {
         setError(data.error || 'Failed to save proposal')
