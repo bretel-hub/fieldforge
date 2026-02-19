@@ -83,8 +83,8 @@ export function ActiveProposals() {
           <p className="text-sm text-gray-500 py-4 text-center">No active proposals</p>
         )}
 
-        <div className="space-y-4">
-          {proposals.slice(0, 4).map((proposal) => (
+        <div className="space-y-4 max-h-96 overflow-y-auto">
+          {proposals.map((proposal) => (
             <div key={proposal.id} className="border-l-4 border-blue-400 pl-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
