@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Edit, Download, Mail, Trash2 } from 'lucide-react'
 import { ProposalPreview } from '@/components/ProposalPreview'
+import { ConfettiCelebration } from '@/components/ConfettiCelebration'
+import { offlineStorage } from '@/lib/offlineStorage'
 
 interface Proposal {
   id: string
@@ -66,6 +68,8 @@ export function ProposalsTable() {
   const [previewProposal, setPreviewProposal] = useState<FullProposal | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Proposal | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [showConfetti, setShowConfetti] = useState(false)
 
   const filteredProposals = useMemo(() => {
     let result = proposals
@@ -110,6 +114,46 @@ export function ProposalsTable() {
 
     fetchProposals()
   }, [])
+
+  const handleStatusChange = async (proposal: Proposal, newStatus: string) => {
+    if (newStatus === proposal.status) return
+    setUpdatingStatus(proposal.id)
+    try {
+      const response = await fetch(`/api/proposals/${proposal.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        setProposals((prev) =>
+          prev.map((p) => (p.id === proposal.id ? { ...p, status: newStatus } : p))
+        )
+        if (newStatus === 'approved') {
+          const jobId = `JOB-${proposal.id}`
+          await offlineStorage.saveJob({
+            id: jobId,
+            jobNumber: `JOB-${proposal.proposal_number}`,
+            title: proposal.project_title,
+            status: 'scheduled',
+            customerId: proposal.customer_name || proposal.customer_contact,
+            customerName: proposal.customer_name || proposal.customer_contact,
+            technicianId: 'unassigned',
+            scheduledDate: new Date().toISOString().split('T')[0],
+            value: proposal.total,
+            location: { address: proposal.customer_address },
+            description: '',
+            syncStatus: 'pending',
+          })
+          setShowConfetti(true)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update proposal status:', err)
+    } finally {
+      setUpdatingStatus(null)
+    }
+  }
 
   const handleDownloadPDF = async (id: string) => {
     try {
@@ -176,6 +220,9 @@ export function ProposalsTable() {
 
   return (
     <>
+      {showConfetti && (
+        <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
+      )}
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -256,9 +303,17 @@ export function ProposalsTable() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[proposal.status as keyof typeof statusStyles] ?? 'bg-gray-100 text-gray-800'}`}>
-                      {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
-                    </span>
+                    <select
+                      value={proposal.status}
+                      onChange={(e) => handleStatusChange(proposal, e.target.value)}
+                      disabled={updatingStatus === proposal.id}
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${statusStyles[proposal.status as keyof typeof statusStyles] ?? 'bg-gray-100 text-gray-800'}`}
+                    >
+                      <option value="draft">Draft</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="declined">Declined</option>
+                    </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
