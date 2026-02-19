@@ -11,7 +11,7 @@ export default function ProposalsPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Build Proposal</h1>
             <p className="text-muted-foreground">
-              Create and manage sales proposals for your customers
+              Create and manage sales proposals
             </p>
           </div>
           <Link 

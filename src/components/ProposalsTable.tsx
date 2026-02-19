@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Eye, Edit, Download, Mail } from 'lucide-react'
+import { Edit, Download, Mail } from 'lucide-react'
 import { ProposalPreview } from '@/components/ProposalPreview'
 
 interface Proposal {
@@ -16,7 +16,6 @@ interface Proposal {
   total: number
   status: string
   created_at: string
-  viewed_at?: string | null
 }
 
 interface FullProposal {
@@ -57,16 +56,6 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return 'Never'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 export function ProposalsTable() {
   const [proposals, setProposals] = useState<Proposal[]>([])
@@ -211,9 +200,6 @@ export function ProposalsTable() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Activity
-                </th>
                 <th className="relative px-6 py-3">
                   <span className="sr-only">Actions</span>
                 </th>
@@ -222,7 +208,7 @@ export function ProposalsTable() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredProposals.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
                     No proposals match your filters.
                   </td>
                 </tr>
@@ -254,17 +240,6 @@ export function ProposalsTable() {
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[proposal.status as keyof typeof statusStyles] ?? 'bg-gray-100 text-gray-800'}`}>
                       {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div>
-                      <div className="flex items-center">
-                        <Eye className="h-4 w-4 mr-1" />
-                        0 views
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        Last: {formatDate(proposal.viewed_at || null)}
-                      </div>
-                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">

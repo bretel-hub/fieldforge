@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, X, DollarSign, Package, Building2 } from 'lucide-react'
 import { offlineStorage } from '@/lib/offlineStorage'
 import { ProposalPreview } from '@/components/ProposalPreview'
+import { ConfettiCelebration } from '@/components/ConfettiCelebration'
 
 interface LineItem {
   id: string
@@ -47,6 +48,7 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
   const [error, setError] = useState<string | null>(null)
   const [selectedStatus, setSelectedStatus] = useState(initialStatus ?? 'draft')
   const [showPreview, setShowPreview] = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
 
   const router = useRouter()
   const isEditing = Boolean(proposalId)
@@ -136,7 +138,7 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
             description: projectDetails.description,
             syncStatus: 'pending',
           })
-          router.push('/jobs')
+          setShowConfetti(true)
         } else {
           router.push('/proposals')
         }
@@ -160,6 +162,10 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
   }
 
   return (
+    <>
+      {showConfetti && (
+        <ConfettiCelebration onComplete={() => router.push('/jobs')} />
+      )}
     <div className="space-y-8 w-full">
       {/* Customer Information */}
       <div className="bg-white shadow rounded-lg p-6">
@@ -445,5 +451,6 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
         />
       )}
     </div>
+    </>
   )
 }
