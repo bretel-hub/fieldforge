@@ -38,14 +38,15 @@ const formatDate = (dateString?: string) => {
   return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-const normalizeStatus = (status?: StoredJob['status']) => {
+const normalizeStatus = (status?: StoredJob['status']): string => {
   if (!status) return 'not-started'
+  const s = status as string
   // Migrate legacy status values to new set
-  if (status === 'completed' || status === 'completing') return 'complete'
-  if (status === 'starting-soon' || status === 'pending') return 'scheduled'
-  if (status === 'in_progress') return 'in-progress'
-  if (status === 'cancelled') return 'on-hold'
-  return status
+  if (s === 'completed' || s === 'completing') return 'complete'
+  if (s === 'starting-soon' || s === 'pending') return 'scheduled'
+  if (s === 'in_progress') return 'in-progress'
+  if (s === 'cancelled') return 'on-hold'
+  return s
 }
 
 export function JobsTable() {
