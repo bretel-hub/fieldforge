@@ -20,8 +20,7 @@ interface Proposal {
 const statusStyles = {
   draft: 'bg-gray-100 text-gray-800',
   pending: 'bg-yellow-100 text-yellow-800',
-  viewed: 'bg-blue-100 text-blue-800',
-  signed: 'bg-green-100 text-green-800',
+  approved: 'bg-green-100 text-green-800',
   declined: 'bg-red-100 text-red-800',
 }
 
@@ -105,8 +104,7 @@ export function ProposalsTable() {
               <option>All Status</option>
               <option>Draft</option>
               <option>Pending</option>
-              <option>Viewed</option>
-              <option>Signed</option>
+              <option>Approved</option>
               <option>Declined</option>
             </select>
             <input
@@ -167,8 +165,8 @@ export function ProposalsTable() {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[proposal.status as keyof typeof statusStyles]}`}>
-                    {proposal.status}
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[proposal.status as keyof typeof statusStyles] ?? 'bg-gray-100 text-gray-800'}`}>
+                    {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

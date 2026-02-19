@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, X, DollarSign, Package, Building2 } from 'lucide-react'
+import { offlineStorage } from '@/lib/offlineStorage'
 
 interface LineItem {
   id: string
@@ -15,6 +16,8 @@ interface LineItem {
 
 interface ProposalBuilderProps {
   proposalId?: string
+  proposalNumber?: string
+  initialStatus?: string
   initialData?: {
     customer: { name: string; contact: string; email: string; address: string }
     projectDetails: { title: string; description: string; location: string; timeline: string }
@@ -22,7 +25,7 @@ interface ProposalBuilderProps {
   }
 }
 
-export function ProposalBuilder({ proposalId, initialData }: ProposalBuilderProps = {}) {
+export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, initialData }: ProposalBuilderProps = {}) {
   const [customer, setCustomer] = useState(
     initialData?.customer ?? { name: '', contact: '', email: '', address: '' }
   )
@@ -41,6 +44,7 @@ export function ProposalBuilder({ proposalId, initialData }: ProposalBuilderProp
   const [total, setTotal] = useState(initSubtotal + initTax)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState(initialStatus ?? 'draft')
 
   const router = useRouter()
   const isEditing = Boolean(proposalId)
@@ -87,7 +91,7 @@ export function ProposalBuilder({ proposalId, initialData }: ProposalBuilderProp
     recalculate(updatedItems)
   }
 
-  const handleSave = async (status: 'draft' | 'sent' = 'draft') => {
+  const handleSave = async (status: string = 'draft') => {
     setSaving(true)
     setError(null)
 
@@ -114,7 +118,26 @@ export function ProposalBuilder({ proposalId, initialData }: ProposalBuilderProp
       const data = await response.json()
 
       if (data.success) {
-        router.push('/proposals')
+        if (status === 'approved' && proposalId) {
+          const jobId = `JOB-${proposalId}`
+          await offlineStorage.saveJob({
+            id: jobId,
+            jobNumber: proposalNumber ? `JOB-${proposalNumber}` : jobId,
+            title: projectDetails.title,
+            status: 'scheduled',
+            customerId: customer.name || customer.contact,
+            customerName: customer.name || customer.contact,
+            technicianId: 'unassigned',
+            scheduledDate: new Date().toISOString().split('T')[0],
+            value: total,
+            location: { address: customer.address },
+            description: projectDetails.description,
+            syncStatus: 'pending',
+          })
+          router.push('/jobs')
+        } else {
+          router.push('/proposals')
+        }
       } else {
         setError(data.error || 'Failed to save proposal')
       }
@@ -348,30 +371,63 @@ export function ProposalBuilder({ proposalId, initialData }: ProposalBuilderProp
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-        <button
-          onClick={() => handleSave('draft')}
-          disabled={saving}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? 'Saving...' : isEditing ? 'Update Draft' : 'Save as Draft'}
-        </button>
-        <div className="flex space-x-3">
-          <button
-            onClick={() => alert('Preview modal coming soon!')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Preview
-          </button>
-          <button
-            onClick={() => handleSave('sent')}
-            disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? 'Sending...' : isEditing ? 'Update & Send' : 'Send Proposal'}
-          </button>
+      {isEditing ? (
+        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+          <div className="flex items-center space-x-3">
+            <label className="text-sm font-medium text-gray-700">Change Status:</label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="rounded-md border-gray-300 text-sm shadow-sm"
+            >
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="declined">Declined</option>
+            </select>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => alert('Preview modal coming soon!')}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => handleSave(selectedStatus)}
+              disabled={saving}
+              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+          <button
+            onClick={() => handleSave('draft')}
+            disabled={saving}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Saving...' : 'Save as Draft'}
+          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => alert('Preview modal coming soon!')}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => handleSave('pending')}
+              disabled={saving}
+              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Sending...' : 'Send Proposal'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

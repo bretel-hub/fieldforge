@@ -53,7 +53,12 @@ export default async function EditProposalPage({
           </p>
         </div>
 
-        <ProposalBuilder proposalId={id} initialData={initialData} />
+        <ProposalBuilder
+          proposalId={id}
+          proposalNumber={proposal.proposal_number}
+          initialStatus={proposal.status ?? 'draft'}
+          initialData={initialData}
+        />
       </div>
     </DashboardLayout>
   )
