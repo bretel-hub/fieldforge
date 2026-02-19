@@ -218,6 +218,11 @@ export function ProposalPreview({
                 >
                   Project Details
                 </div>
+                {projectDetails.title && (
+                  <div className="text-sm font-semibold text-gray-900 mb-1" style={{ fontFamily: 'sans-serif' }}>
+                    {projectDetails.title}
+                  </div>
+                )}
                 {projectDetails.description && (
                   <p className="text-sm text-gray-700 leading-relaxed" style={{ fontFamily: 'sans-serif' }}>
                     {projectDetails.description}

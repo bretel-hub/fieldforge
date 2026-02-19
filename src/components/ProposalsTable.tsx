@@ -2,19 +2,44 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Eye, Edit, MoreHorizontal, Download, Send } from 'lucide-react'
+import { Eye, Edit, Download, Mail } from 'lucide-react'
+import { ProposalPreview } from '@/components/ProposalPreview'
 
 interface Proposal {
   id: string
   proposal_number: string
   customer_name: string
   customer_contact: string
+  customer_email: string
   customer_address: string
   project_title: string
   total: number
   status: string
   created_at: string
   viewed_at?: string | null
+}
+
+interface FullProposal {
+  proposal_number: string
+  customer_name: string
+  customer_contact: string
+  customer_email: string
+  customer_address: string
+  project_title: string
+  project_description: string
+  project_location: string
+  project_timeline: string
+  subtotal: number
+  tax_amount: number
+  total: number
+  items: Array<{
+    id: string
+    category: string
+    description: string
+    quantity: number
+    unit_price: number
+    total: number
+  }>
 }
 
 const statusStyles = {
@@ -49,6 +74,7 @@ export function ProposalsTable() {
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [search, setSearch] = useState<string>('')
+  const [previewProposal, setPreviewProposal] = useState<FullProposal | null>(null)
 
   const filteredProposals = useMemo(() => {
     let result = proposals
@@ -77,7 +103,7 @@ export function ProposalsTable() {
       try {
         const response = await fetch('/api/proposals')
         const data = await response.json()
-        
+
         if (data.success) {
           setProposals(data.proposals)
         } else {
@@ -93,6 +119,28 @@ export function ProposalsTable() {
 
     fetchProposals()
   }, [])
+
+  const handleDownloadPDF = async (id: string) => {
+    try {
+      const response = await fetch(`/api/proposals/${id}`)
+      const data = await response.json()
+      if (data.success) {
+        setPreviewProposal(data.proposal)
+      }
+    } catch (err) {
+      console.error('Failed to fetch proposal for PDF:', err)
+    }
+  }
+
+  const handleEmail = (proposal: Proposal) => {
+    const subject = encodeURIComponent(
+      `Proposal ${proposal.proposal_number}: ${proposal.project_title}`
+    )
+    const body = encodeURIComponent(
+      `Please find attached the proposal ${proposal.proposal_number} for ${proposal.project_title}.\n\nTotal: ${formatCurrency(proposal.total)}\n\nPlease let us know if you have any questions.`
+    )
+    window.open(`mailto:${proposal.customer_email || ''}?subject=${subject}&body=${body}`)
+  }
 
   if (loading) {
     return (
@@ -119,145 +167,186 @@ export function ProposalsTable() {
   }
 
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-900">All Proposals</h3>
-          <div className="flex items-center space-x-2">
-            <select
-              className="rounded-md border-gray-300 text-sm"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="draft">Draft</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="declined">Declined</option>
-            </select>
-            <input
-              type="search"
-              placeholder="Search proposals..."
-              className="rounded-md border-gray-300 text-sm"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+    <>
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-900">All Proposals</h3>
+            <div className="flex items-center space-x-2">
+              <select
+                className="rounded-md border-gray-300 text-sm"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="draft">Draft</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="declined">Declined</option>
+              </select>
+              <input
+                type="search"
+                placeholder="Search proposals..."
+                className="rounded-md border-gray-300 text-sm"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Proposal
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Customer
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Value
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Activity
-              </th>
-              <th className="relative px-6 py-3">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredProposals.length === 0 && (
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
-                  No proposals match your filters.
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Proposal
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Value
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Activity
+                </th>
+                <th className="relative px-6 py-3">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
-            )}
-            {filteredProposals.map((proposal) => (
-              <tr key={proposal.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Link href={`/proposals/${proposal.id}/edit`} className="group">
-                    <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
-                      {proposal.proposal_number}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {proposal.project_title}
-                    </div>
-                  </Link>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-gray-900">
-                    {proposal.customer_name || proposal.customer_contact}
-                  </div>
-                  <div className="text-sm text-gray-500">{proposal.customer_address}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(proposal.total)}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[proposal.status as keyof typeof statusStyles] ?? 'bg-gray-100 text-gray-800'}`}>
-                    {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <div>
-                    <div className="flex items-center">
-                      <Eye className="h-4 w-4 mr-1" />
-                      0 views
-                    </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      Last: {formatDate(proposal.viewed_at || null)}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center space-x-2">
-                    <Link
-                      href={`/proposals/${proposal.id}/edit`}
-                      className="text-blue-600 hover:text-blue-500"
-                      title="Edit proposal"
-                    >
-                      <Edit className="h-4 w-4" />
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredProposals.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
+                    No proposals match your filters.
+                  </td>
+                </tr>
+              )}
+              {filteredProposals.map((proposal) => (
+                <tr key={proposal.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link href={`/proposals/${proposal.id}/edit`} className="group">
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+                        {proposal.proposal_number}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {proposal.project_title}
+                      </div>
                     </Link>
-                    <button className="text-gray-400 hover:text-gray-500">
-                      <Download className="h-4 w-4" />
-                    </button>
-                    <button className="text-green-600 hover:text-green-500">
-                      <Send className="h-4 w-4" />
-                    </button>
-                    <button className="text-gray-400 hover:text-gray-500">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      
-      <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Showing {filteredProposals.length} of {proposals.length} {proposals.length === 1 ? 'proposal' : 'proposals'}
-          </div>
-          <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 text-sm border rounded-md disabled:opacity-50" disabled>
-              Previous
-            </button>
-            <button className="px-3 py-1 text-sm border rounded-md">
-              Next
-            </button>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {proposal.customer_name || proposal.customer_contact}
+                    </div>
+                    <div className="text-sm text-gray-500">{proposal.customer_address}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {formatCurrency(proposal.total)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[proposal.status as keyof typeof statusStyles] ?? 'bg-gray-100 text-gray-800'}`}>
+                      {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div>
+                      <div className="flex items-center">
+                        <Eye className="h-4 w-4 mr-1" />
+                        0 views
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Last: {formatDate(proposal.viewed_at || null)}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/proposals/${proposal.id}/edit`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                        title="Edit proposal"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDownloadPDF(proposal.id)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                        title="Download PDF"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download PDF
+                      </button>
+                      <button
+                        onClick={() => handleEmail(proposal)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+                        title="Email proposal"
+                      >
+                        <Mail className="h-3.5 w-3.5" />
+                        Email
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              Showing {filteredProposals.length} of {proposals.length} {proposals.length === 1 ? 'proposal' : 'proposals'}
+            </div>
+            <div className="flex items-center space-x-2">
+              <button className="px-3 py-1 text-sm border rounded-md disabled:opacity-50" disabled>
+                Previous
+              </button>
+              <button className="px-3 py-1 text-sm border rounded-md">
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* PDF Preview Modal */}
+      {previewProposal && (
+        <ProposalPreview
+          proposalNumber={previewProposal.proposal_number}
+          customer={{
+            name: previewProposal.customer_name,
+            contact: previewProposal.customer_contact,
+            email: previewProposal.customer_email,
+            address: previewProposal.customer_address,
+          }}
+          projectDetails={{
+            title: previewProposal.project_title,
+            description: previewProposal.project_description,
+            location: previewProposal.project_location,
+            timeline: previewProposal.project_timeline,
+          }}
+          items={previewProposal.items.map((item) => ({
+            id: item.id,
+            category: item.category,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unit_price,
+            total: item.total,
+          }))}
+          subtotal={previewProposal.subtotal}
+          tax={previewProposal.tax_amount}
+          total={previewProposal.total}
+          onClose={() => setPreviewProposal(null)}
+        />
+      )}
+    </>
   )
 }
