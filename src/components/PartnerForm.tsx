@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, X, Trash2, Upload, FileText, MapPin, DollarSign, Shield, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { formatPhone } from '@/lib/utils'
 
 interface Cost {
   id: string
@@ -41,7 +42,7 @@ export function PartnerForm({ partnerId, initialData }: PartnerFormProps) {
 
   const [name, setName] = useState(initialData?.name ?? '')
   const [companyName, setCompanyName] = useState(initialData?.companyName ?? '')
-  const [phone, setPhone] = useState(initialData?.phone ?? '')
+  const [phone, setPhone] = useState(formatPhone(initialData?.phone ?? ''))
   const [email, setEmail] = useState(initialData?.email ?? '')
   const [website, setWebsite] = useState(initialData?.website ?? '')
   const [address, setAddress] = useState(initialData?.address ?? '')
@@ -196,9 +197,9 @@ export function PartnerForm({ partnerId, initialData }: PartnerFormProps) {
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(formatPhone(e.target.value))}
               className="w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="(555) 000-0000"
+              placeholder="555-000-0000"
             />
           </div>
           <div>

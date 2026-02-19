@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Edit, Trash2 } from 'lucide-react'
+import { formatPhone } from '@/lib/utils'
 
 interface Partner {
   id: string
@@ -108,7 +109,7 @@ export function PartnersTable() {
                   </td>
                   <td className="px-6 py-4">
                     {partner.phone && (
-                      <div className="text-sm text-gray-900">{partner.phone}</div>
+                      <div className="text-sm text-gray-900">{formatPhone(partner.phone)}</div>
                     )}
                     {partner.email && (
                       <div className="text-sm text-gray-500">{partner.email}</div>
