@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { Edit, Download, Mail } from 'lucide-react'
+import { Edit, Download, Mail, Trash2 } from 'lucide-react'
 import { ProposalPreview } from '@/components/ProposalPreview'
 
 interface Proposal {
@@ -64,6 +64,8 @@ export function ProposalsTable() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [search, setSearch] = useState<string>('')
   const [previewProposal, setPreviewProposal] = useState<FullProposal | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Proposal | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const filteredProposals = useMemo(() => {
     let result = proposals
@@ -118,6 +120,23 @@ export function ProposalsTable() {
       }
     } catch (err) {
       console.error('Failed to fetch proposal for PDF:', err)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/proposals/${deleteTarget.id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        setProposals((prev) => prev.filter((p) => p.id !== deleteTarget.id))
+        setDeleteTarget(null)
+      }
+    } catch (err) {
+      console.error('Failed to delete proposal:', err)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -267,6 +286,14 @@ export function ProposalsTable() {
                         <Mail className="h-3.5 w-3.5" />
                         Email
                       </button>
+                      <button
+                        onClick={() => setDeleteTarget(proposal)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                        title="Delete proposal"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -291,6 +318,39 @@ export function ProposalsTable() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDeleteTarget(null)} />
+          <div className="relative z-10 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h2 className="text-base font-semibold text-gray-900">Delete Proposal</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure want to delete this proposal?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PDF Preview Modal */}
       {previewProposal && (
