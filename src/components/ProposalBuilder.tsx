@@ -13,29 +13,37 @@ interface LineItem {
   total: number
 }
 
-export function ProposalBuilder() {
-  const [customer, setCustomer] = useState({
-    name: '',
-    contact: '',
-    email: '',
-    address: '',
-  })
-  
-  const [projectDetails, setProjectDetails] = useState({
-    title: '',
-    description: '',
-    location: '',
-    timeline: '',
-  })
+interface ProposalBuilderProps {
+  proposalId?: string
+  initialData?: {
+    customer: { name: string; contact: string; email: string; address: string }
+    projectDetails: { title: string; description: string; location: string; timeline: string }
+    items: LineItem[]
+  }
+}
 
-  const [items, setItems] = useState<LineItem[]>([])
-  const [subtotal, setSubtotal] = useState(0)
-  const [tax, setTax] = useState(0)
-  const [total, setTotal] = useState(0)
+export function ProposalBuilder({ proposalId, initialData }: ProposalBuilderProps = {}) {
+  const [customer, setCustomer] = useState(
+    initialData?.customer ?? { name: '', contact: '', email: '', address: '' }
+  )
+
+  const [projectDetails, setProjectDetails] = useState(
+    initialData?.projectDetails ?? { title: '', description: '', location: '', timeline: '' }
+  )
+
+  const initItems = initialData?.items ?? []
+  const initSubtotal = initItems.reduce((sum, item) => sum + item.total, 0)
+  const initTax = initSubtotal * 0.0875
+
+  const [items, setItems] = useState<LineItem[]>(initItems)
+  const [subtotal, setSubtotal] = useState(initSubtotal)
+  const [tax, setTax] = useState(initTax)
+  const [total, setTotal] = useState(initSubtotal + initTax)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const router = useRouter()
+  const isEditing = Boolean(proposalId)
 
   const recalculate = (updatedItems: LineItem[]) => {
     const newSubtotal = updatedItems.reduce((sum, item) => sum + item.total, 0)
@@ -84,8 +92,11 @@ export function ProposalBuilder() {
     setError(null)
 
     try {
-      const response = await fetch('/api/proposals', {
-        method: 'POST',
+      const url = isEditing ? `/api/proposals/${proposalId}` : '/api/proposals'
+      const method = isEditing ? 'PATCH' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -103,7 +114,6 @@ export function ProposalBuilder() {
       const data = await response.json()
 
       if (data.success) {
-        // Redirect to proposals list
         router.push('/proposals')
       } else {
         setError(data.error || 'Failed to save proposal')
@@ -339,26 +349,26 @@ export function ProposalBuilder() {
 
       {/* Actions */}
       <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-        <button 
+        <button
           onClick={() => handleSave('draft')}
           disabled={saving}
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving ? 'Saving...' : 'Save as Draft'}
+          {saving ? 'Saving...' : isEditing ? 'Update Draft' : 'Save as Draft'}
         </button>
         <div className="flex space-x-3">
-          <button 
+          <button
             onClick={() => alert('Preview modal coming soon!')}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Preview
           </button>
-          <button 
+          <button
             onClick={() => handleSave('sent')}
             disabled={saving}
             className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? 'Sending...' : 'Send Proposal'}
+            {saving ? 'Sending...' : isEditing ? 'Update & Send' : 'Send Proposal'}
           </button>
         </div>
       </div>
