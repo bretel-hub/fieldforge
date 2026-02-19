@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Eye, Edit, MoreHorizontal, Download, Send } from 'lucide-react'
 
@@ -47,6 +47,30 @@ export function ProposalsTable() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [search, setSearch] = useState<string>('')
+
+  const filteredProposals = useMemo(() => {
+    let result = proposals
+
+    if (statusFilter !== 'all') {
+      result = result.filter((p) => p.status === statusFilter)
+    }
+
+    if (search.trim()) {
+      const term = search.toLowerCase()
+      result = result.filter(
+        (p) =>
+          p.proposal_number.toLowerCase().includes(term) ||
+          p.project_title.toLowerCase().includes(term) ||
+          (p.customer_name || '').toLowerCase().includes(term) ||
+          (p.customer_contact || '').toLowerCase().includes(term) ||
+          (p.customer_address || '').toLowerCase().includes(term)
+      )
+    }
+
+    return result
+  }, [proposals, statusFilter, search])
 
   useEffect(() => {
     async function fetchProposals() {
@@ -100,17 +124,23 @@ export function ProposalsTable() {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium text-gray-900">All Proposals</h3>
           <div className="flex items-center space-x-2">
-            <select className="rounded-md border-gray-300 text-sm">
-              <option>All Status</option>
-              <option>Draft</option>
-              <option>Pending</option>
-              <option>Approved</option>
-              <option>Declined</option>
+            <select
+              className="rounded-md border-gray-300 text-sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="declined">Declined</option>
             </select>
             <input
               type="search"
               placeholder="Search proposals..."
               className="rounded-md border-gray-300 text-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
         </div>
@@ -141,7 +171,14 @@ export function ProposalsTable() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {proposals.map((proposal) => (
+            {filteredProposals.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
+                  No proposals match your filters.
+                </td>
+              </tr>
+            )}
+            {filteredProposals.map((proposal) => (
               <tr key={proposal.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Link href={`/proposals/${proposal.id}/edit`} className="group">
@@ -209,7 +246,7 @@ export function ProposalsTable() {
       <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing {proposals.length} {proposals.length === 1 ? 'proposal' : 'proposals'}
+            Showing {filteredProposals.length} of {proposals.length} {proposals.length === 1 ? 'proposal' : 'proposals'}
           </div>
           <div className="flex items-center space-x-2">
             <button className="px-3 py-1 text-sm border rounded-md disabled:opacity-50" disabled>
