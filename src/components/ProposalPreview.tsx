@@ -208,12 +208,31 @@ export function ProposalPreview({
           </div>
 
           <div className="px-10 py-8 space-y-8">
-            {/* ── CUSTOMER INFORMATION ── */}
+            {/* ── PROJECT DETAILS + PREPARED FOR ── */}
             <div className="flex gap-8">
+              {/* Left: Project Details (was Scope of Work) */}
               <div className="flex-1">
                 <div
                   className="text-xs font-bold uppercase tracking-widest mb-3 pb-1 border-b"
                   style={{ fontFamily: 'sans-serif', color: '#1e3a5f', borderColor: '#bfdbfe' }}
+                >
+                  Project Details
+                </div>
+                {projectDetails.description && (
+                  <p className="text-sm text-gray-700 leading-relaxed" style={{ fontFamily: 'sans-serif' }}>
+                    {projectDetails.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Right: Prepared For (in blue box) */}
+              <div
+                className="flex-1 rounded-lg px-5 py-4"
+                style={{ background: '#eff6ff', border: '1px solid #bfdbfe' }}
+              >
+                <div
+                  className="text-xs font-bold uppercase tracking-widest mb-3"
+                  style={{ fontFamily: 'sans-serif', color: '#1e3a5f' }}
                 >
                   Prepared For
                 </div>
@@ -236,131 +255,82 @@ export function ProposalPreview({
                   )}
                 </div>
               </div>
-
-              {/* Project summary box */}
-              <div
-                className="flex-1 rounded-lg px-5 py-4"
-                style={{ background: '#eff6ff', border: '1px solid #bfdbfe' }}
-              >
-                <div
-                  className="text-xs font-bold uppercase tracking-widest mb-3"
-                  style={{ fontFamily: 'sans-serif', color: '#1e3a5f' }}
-                >
-                  Project Details
-                </div>
-                {projectDetails.location && (
-                  <div className="flex gap-2 text-sm mb-1" style={{ fontFamily: 'sans-serif' }}>
-                    <span className="text-gray-500 w-20 shrink-0">Location:</span>
-                    <span className="text-gray-800">{projectDetails.location}</span>
-                  </div>
-                )}
-                {projectDetails.timeline && (
-                  <div className="flex gap-2 text-sm mb-1" style={{ fontFamily: 'sans-serif' }}>
-                    <span className="text-gray-500 w-20 shrink-0">Timeline:</span>
-                    <span className="text-gray-800">{projectDetails.timeline}</span>
-                  </div>
-                )}
-                <div className="flex gap-2 text-sm" style={{ fontFamily: 'sans-serif' }}>
-                  <span className="text-gray-500 w-20 shrink-0">Prepared:</span>
-                  <span className="text-gray-800">{today}</span>
-                </div>
-              </div>
             </div>
-
-            {/* ── PROJECT DESCRIPTION ── */}
-            {projectDetails.description && (
-              <div>
-                <div
-                  className="text-xs font-bold uppercase tracking-widest mb-2 pb-1 border-b"
-                  style={{ fontFamily: 'sans-serif', color: '#1e3a5f', borderColor: '#bfdbfe' }}
-                >
-                  Scope of Work
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed" style={{ fontFamily: 'sans-serif' }}>
-                  {projectDetails.description}
-                </p>
-              </div>
-            )}
 
             {/* ── LINE ITEMS ── */}
             {items.length > 0 && (
               <div>
                 <div
-                  className="text-xs font-bold uppercase tracking-widest mb-3 pb-1 border-b"
+                  className="text-xs font-bold uppercase tracking-widest mb-4 pb-1 border-b"
                   style={{ fontFamily: 'sans-serif', color: '#1e3a5f', borderColor: '#bfdbfe' }}
                 >
                   Itemized Pricing
                 </div>
 
-                <table className="w-full text-sm border-collapse" style={{ fontFamily: 'sans-serif' }}>
-                  <thead>
-                    <tr style={{ background: '#1e3a5f', color: 'white' }}>
-                      <th className="text-left px-3 py-2 font-semibold rounded-tl-md" style={{ width: '44%' }}>Description</th>
-                      <th className="text-center px-3 py-2 font-semibold" style={{ width: '14%' }}>Category</th>
-                      <th className="text-center px-3 py-2 font-semibold" style={{ width: '10%' }}>Qty</th>
-                      <th className="text-right px-3 py-2 font-semibold" style={{ width: '16%' }}>Unit Price</th>
-                      <th className="text-right px-3 py-2 font-semibold rounded-tr-md" style={{ width: '16%' }}>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {categoryList.map((category) =>
-                      groupedItems[category].map((item, idx) => {
-                        const isFirst = idx === 0
-                        const isLastInGroup = idx === groupedItems[category].length - 1
-                        const isLastRow =
-                          category === categoryList[categoryList.length - 1] && isLastInGroup
-                        const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc'
-                        return (
-                          <tr key={item.id} style={{ background: rowBg }}>
-                            <td
-                              className="px-3 py-2 text-gray-800"
-                              style={{ borderBottom: isLastRow ? 'none' : '1px solid #e5e7eb' }}
-                            >
-                              {isFirst && (
-                                <span
-                                  className="inline-block text-xs font-bold uppercase mr-2 px-1.5 py-0.5 rounded"
-                                  style={{
-                                    background: categoryColors[category] ?? '#374151',
-                                    color: 'white',
-                                    fontSize: '9px',
-                                    letterSpacing: '0.05em',
-                                  }}
-                                >
-                                  {category}
-                                </span>
-                              )}
-                              {item.description || <em className="text-gray-400">No description</em>}
-                            </td>
-                            <td
-                              className="px-3 py-2 text-center text-gray-500"
-                              style={{ borderBottom: isLastRow ? 'none' : '1px solid #e5e7eb' }}
-                            >
-                              {isFirst ? '—' : ''}
-                            </td>
-                            <td
-                              className="px-3 py-2 text-center text-gray-700"
-                              style={{ borderBottom: isLastRow ? 'none' : '1px solid #e5e7eb' }}
-                            >
-                              {item.quantity}
-                            </td>
-                            <td
-                              className="px-3 py-2 text-right text-gray-700"
-                              style={{ borderBottom: isLastRow ? 'none' : '1px solid #e5e7eb' }}
-                            >
-                              {formatCurrency(item.unitPrice)}
-                            </td>
-                            <td
-                              className="px-3 py-2 text-right font-medium text-gray-900"
-                              style={{ borderBottom: isLastRow ? 'none' : '1px solid #e5e7eb' }}
-                            >
-                              {formatCurrency(item.total)}
-                            </td>
+                <div className="space-y-5">
+                  {categoryList.map((category) => (
+                    <div key={category}>
+                      {/* Category header */}
+                      <div
+                        className="text-sm font-bold px-3 py-1.5 mb-1 rounded"
+                        style={{
+                          fontFamily: 'sans-serif',
+                          background: categoryColors[category] ?? '#374151',
+                          color: 'white',
+                          letterSpacing: '0.02em',
+                        }}
+                      >
+                        {category}
+                      </div>
+
+                      {/* Items under this category */}
+                      <table className="w-full text-sm border-collapse" style={{ fontFamily: 'sans-serif' }}>
+                        <thead>
+                          <tr style={{ background: '#f1f5f9' }}>
+                            <th className="text-left px-3 py-1.5 font-semibold text-gray-600" style={{ width: '52%' }}>Description</th>
+                            <th className="text-center px-3 py-1.5 font-semibold text-gray-600" style={{ width: '12%' }}>Qty</th>
+                            <th className="text-right px-3 py-1.5 font-semibold text-gray-600" style={{ width: '18%' }}>Unit Price</th>
+                            <th className="text-right px-3 py-1.5 font-semibold text-gray-600" style={{ width: '18%' }}>Total</th>
                           </tr>
-                        )
-                      })
-                    )}
-                  </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                          {groupedItems[category].map((item, idx) => {
+                            const isLast = idx === groupedItems[category].length - 1
+                            const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc'
+                            return (
+                              <tr key={item.id} style={{ background: rowBg }}>
+                                <td
+                                  className="px-3 py-2 text-gray-800"
+                                  style={{ borderBottom: isLast ? 'none' : '1px solid #e5e7eb' }}
+                                >
+                                  {item.description || <em className="text-gray-400">No description</em>}
+                                </td>
+                                <td
+                                  className="px-3 py-2 text-center text-gray-700"
+                                  style={{ borderBottom: isLast ? 'none' : '1px solid #e5e7eb' }}
+                                >
+                                  {item.quantity}
+                                </td>
+                                <td
+                                  className="px-3 py-2 text-right text-gray-700"
+                                  style={{ borderBottom: isLast ? 'none' : '1px solid #e5e7eb' }}
+                                >
+                                  {formatCurrency(item.unitPrice)}
+                                </td>
+                                <td
+                                  className="px-3 py-2 text-right font-medium text-gray-900"
+                                  style={{ borderBottom: isLast ? 'none' : '1px solid #e5e7eb' }}
+                                >
+                                  {formatCurrency(item.total)}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
