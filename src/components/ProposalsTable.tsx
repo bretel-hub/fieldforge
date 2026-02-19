@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Eye, Edit, MoreHorizontal, Download, Send } from 'lucide-react'
 
 interface Proposal {
@@ -143,14 +144,14 @@ export function ProposalsTable() {
             {proposals.map((proposal) => (
               <tr key={proposal.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
+                  <Link href={`/proposals/${proposal.id}/edit`} className="group">
+                    <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
                       {proposal.proposal_number}
                     </div>
                     <div className="text-sm text-gray-600">
                       {proposal.project_title}
                     </div>
-                  </div>
+                  </Link>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">{proposal.customer_name}</div>
@@ -178,9 +179,13 @@ export function ProposalsTable() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center space-x-2">
-                    <button className="text-blue-600 hover:text-blue-500">
+                    <Link
+                      href={`/proposals/${proposal.id}/edit`}
+                      className="text-blue-600 hover:text-blue-500"
+                      title="Edit proposal"
+                    >
                       <Edit className="h-4 w-4" />
-                    </button>
+                    </Link>
                     <button className="text-gray-400 hover:text-gray-500">
                       <Download className="h-4 w-4" />
                     </button>
