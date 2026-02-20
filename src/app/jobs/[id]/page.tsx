@@ -195,9 +195,6 @@ export default function JobDetailPage() {
   }
 
   const statusColor = STATUS_COLORS[status] ?? STATUS_COLORS['not-started']
-  const address = job.location?.label
-    ? `${job.location.label}${job.location.address ? ` · ${job.location.address}` : ''}`
-    : job.location?.address ?? '—'
   const noteEntries = job.noteEntries ?? []
   const hasItems = job.lineItems && job.lineItems.length > 0
 
@@ -274,16 +271,21 @@ export default function JobDetailPage() {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Phone className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Phone</p>
-                  {job.customerPhone ? (
-                    <a href={`tel:${job.customerPhone}`} className="text-blue-600 hover:underline">{job.customerPhone}</a>
-                  ) : (
-                    <p className="text-gray-400">—</p>
-                  )}
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Contact</p>
+                  <p className="text-gray-900">{job.customerContact || '—'}</p>
                 </div>
               </div>
+              {job.customerPhone && (
+                <div className="flex items-start gap-3">
+                  <Phone className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Phone</p>
+                    <a href={`tel:${job.customerPhone}`} className="text-blue-600 hover:underline">{job.customerPhone}</a>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
@@ -301,7 +303,7 @@ export default function JobDetailPage() {
                 <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Address</p>
-                  <p className="text-gray-900">{job.customerAddress || '—'}</p>
+                  <p className="text-gray-900">{job.customerAddress || job.location?.address || '—'}</p>
                 </div>
               </div>
             </div>
@@ -322,18 +324,9 @@ export default function JobDetailPage() {
           )}
 
           {/* Project meta */}
-          {(address !== '—' || job.projectTimeline || job.estimatedCompletion || job.technicianName) && (
+          {(job.projectTimeline || job.estimatedCompletion || job.technicianName) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm pt-5 mt-5 border-t border-gray-100">
               <div className="space-y-4">
-                {address !== '—' && (
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Job Location</p>
-                      <p className="text-gray-900">{address}</p>
-                    </div>
-                  </div>
-                )}
                 {job.projectTimeline && (
                   <div className="flex items-start gap-3">
                     <CalendarDays className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
