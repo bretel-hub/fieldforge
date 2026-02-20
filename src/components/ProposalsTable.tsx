@@ -244,7 +244,10 @@ export function ProposalsTable() {
   return (
     <>
       {showConfetti && (
-        <ConfettiCelebration onComplete={() => setShowConfetti(false)} />
+        <ConfettiCelebration onComplete={() => {
+          setShowConfetti(false)
+          router.push('/jobs')
+        }} />
       )}
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
