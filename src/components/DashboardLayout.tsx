@@ -39,7 +39,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex h-full flex-col gap-8">
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-[var(--shadow-soft)]">
-          <img src="/logos/ff-logo.svg" alt="FieldForge logo" className="h-10 w-auto object-contain" />
+          <img src="/logos/ff-logo.svg" alt="FieldForge logo" className="h-9 w-9" />
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">FieldForge</p>
@@ -112,7 +112,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <span className="sr-only">Open sidebar</span>
             <Menu className="h-5 w-5" />
           </button>
-          <img src="/logos/ff-logo.svg" alt="FieldForge" className="mr-auto h-8 w-auto object-contain flex-shrink-0 lg:hidden" />
+          <img src="/logos/ff-logo.svg" alt="FieldForge" className="mr-auto h-8 w-8 flex-shrink-0 lg:hidden" />
           <div className="ml-auto flex items-center gap-3">
             <button className="rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)]">
               Support
