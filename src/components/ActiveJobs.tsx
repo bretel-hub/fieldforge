@@ -1,103 +1,129 @@
 'use client'
 
-import { Camera, MapPin, User } from 'lucide-react'
+import { Camera, MapPin, Calendar, User } from 'lucide-react'
 
 const jobs = [
   {
-    id: 'Z4',
+    id: 1,
     customer: 'Riverside Restaurant',
     title: 'Kitchen Electrical Work',
-    status: 'In progress',
+    status: 'in-progress',
     progress: 75,
     assignee: 'Mike Johnson',
     location: '123 River St',
-    lastUpdate: 'Breaker panel cleared · 3h ago',
+    lastUpdate: '3 hours ago',
     photosCount: 24,
   },
   {
-    id: 'Q9',
+    id: 2,
     customer: 'Office Park Building A',
     title: 'Security Camera Installation',
-    status: 'Scheduled',
-    progress: 10,
+    status: 'scheduled',
+    progress: 0,
     assignee: 'Sarah Chen',
     location: '456 Business Blvd',
-    lastUpdate: 'Kit arrival ETA 12h',
+    lastUpdate: 'Starts Monday',
     photosCount: 0,
   },
   {
-    id: 'H2',
+    id: 3,
     customer: 'Greenfield Apartments',
-    title: 'HVAC Maintenance · Units 12-24',
-    status: 'In progress',
+    title: 'HVAC Maintenance - Units 12-24',
+    status: 'in-progress',
     progress: 45,
     assignee: 'Dave Rodriguez',
     location: '789 Green Ave',
-    lastUpdate: '14 tasks open',
+    lastUpdate: '1 day ago',
     photosCount: 15,
+  },
+  {
+    id: 4,
+    customer: 'Metro Health Clinic',
+    title: 'Network Infrastructure',
+    status: 'starting-soon',
+    progress: 10,
+    assignee: 'Alex Kim',
+    location: '321 Health Way',
+    lastUpdate: 'Site survey completed',
+    photosCount: 8,
   },
 ]
 
+const statusStyles = {
+  'scheduled': 'bg-gray-100 text-gray-800',
+  'starting-soon': 'bg-blue-100 text-blue-800',
+  'in-progress': 'bg-yellow-100 text-yellow-800',
+  'completing': 'bg-green-100 text-green-800',
+}
+
 export function ActiveJobs() {
   return (
-    <section className="rounded-[32px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">Field crews</p>
-          <h3 className="mt-2 text-2xl font-[Manrope] text-[var(--text)]">Live jobs</h3>
+    <div className="bg-white shadow rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">Active Jobs</h3>
+          <span className="text-sm text-gray-500">12 total</span>
         </div>
-        <div className="text-right text-sm text-[var(--text-muted)]">
-          <p>12 active</p>
-          <p>3 off-grid</p>
-        </div>
-      </div>
-
-      <div className="mt-6 space-y-4">
-        {jobs.map((job) => (
-          <article key={job.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <header className="flex items-center justify-between">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.4em] text-[var(--text-muted)]">{job.id}</p>
-                <h4 className="text-lg font-semibold text-[var(--text)]">{job.customer}</h4>
-                <p className="text-sm text-[var(--text-muted)]">{job.title}</p>
-              </div>
-              <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[#0c6cf2]">
-                {job.status}
-              </span>
-            </header>
-
-            <div className="mt-4 flex flex-wrap gap-4 text-xs text-[var(--text-muted)]">
-              <div className="flex items-center gap-2">
-                <User className="h-3.5 w-3.5 text-[#0c6cf2]" />
-                {job.assignee}
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-[#0c6cf2]" />
-                {job.location}
-              </div>
-              <div className="flex items-center gap-2">
-                <Camera className="h-3.5 w-3.5 text-[#7a7a71]" />
-                {job.photosCount} photos
+        
+        <div className="space-y-4">
+          {jobs.map((job) => (
+            <div key={job.id} className="border-l-4 border-green-400 pl-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-gray-900">
+                      {job.customer}
+                    </p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[job.status as keyof typeof statusStyles]}`}>
+                      {job.status.replace('-', ' ')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">{job.title}</p>
+                  
+                  {/* Progress bar */}
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-500">Progress</span>
+                      <span className="text-gray-900">{job.progress}%</span>
+                    </div>
+                    <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all"
+                        style={{ width: `${job.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center mt-2 space-x-4 text-xs text-gray-500">
+                    <div className="flex items-center">
+                      <User className="h-3 w-3 mr-1" />
+                      {job.assignee}
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {job.location}
+                    </div>
+                    <div className="flex items-center">
+                      <Camera className="h-3 w-3 mr-1" />
+                      {job.photosCount} photos
+                    </div>
+                  </div>
+                  
+                  <p className="mt-1 text-xs text-gray-400">
+                    Last update: {job.lastUpdate}
+                  </p>
+                </div>
               </div>
             </div>
-
-            <p className="mt-2 text-xs text-[var(--text-muted)]">{job.lastUpdate}</p>
-
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-                <span>Progress</span>
-                <span className="text-[var(--text)]">{job.progress}%</span>
-              </div>
-              <div className="mt-2 h-2 w-full rounded-full bg-[var(--surface-alt)]">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#0c6cf2] to-[#14b8a6]"
-                  style={{ width: `${job.progress}%` }}
-                />
-              </div>
-            </div>
-          </article>
-        ))}
+          ))}
+        </div>
+        
+        <div className="mt-4">
+          <button className="text-sm text-blue-600 hover:text-blue-500 font-medium">
+            View all jobs →
+          </button>
+        </div>
       </div>
-    </section>
+    </div>
   )
 }

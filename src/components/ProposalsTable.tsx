@@ -1,52 +1,99 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Eye, Edit, MoreHorizontal, Download, Send, Search, Filter } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Edit, Download, Mail, Trash2 } from 'lucide-react'
+import { ProposalPreview } from '@/components/ProposalPreview'
+import { ConfettiCelebration } from '@/components/ConfettiCelebration'
+import { offlineStorage } from '@/lib/offlineStorage'
 
 interface Proposal {
   id: string
   proposal_number: string
   customer_name: string
+  customer_contact: string
+  customer_email: string
+  customer_address: string
   project_title: string
   total: number
   status: string
   created_at: string
-  viewed_at?: string | null
 }
 
-const statusTokens: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Draft', color: 'text-[#7a7a71] bg-[#f3f1ed]' },
-  pending: { label: 'Pending', color: 'text-[#b76a00] bg-[#fef4e6]' },
-  viewed: { label: 'Viewed', color: 'text-[#0f766e] bg-[#eefbf9]' },
-  signed: { label: 'Signed', color: 'text-[#0c6cf2] bg-[#e3f3ff]' },
-  declined: { label: 'Declined', color: 'text-[#b42318] bg-[#feeceb]' },
+interface FullProposal {
+  proposal_number: string
+  customer_name: string
+  customer_contact: string
+  customer_email: string
+  customer_address: string
+  project_title: string
+  project_description: string
+  project_location: string
+  project_timeline: string
+  subtotal: number
+  tax_amount: number
+  total: number
+  items: Array<{
+    id: string
+    category: string
+    description: string
+    quantity: number
+    unit_price: number
+    total: number
+  }>
 }
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', {
+const statusStyles = {
+  draft: 'bg-gray-100 text-gray-800',
+  pending: 'bg-yellow-100 text-yellow-800',
+  approved: 'bg-green-100 text-green-800',
+  declined: 'bg-red-100 text-red-800',
+}
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
   }).format(amount)
-
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return 'Never'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 }
 
-const filters = ['all', 'draft', 'pending', 'viewed', 'signed', 'declined']
 
 export function ProposalsTable() {
+  const router = useRouter()
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeFilter, setActiveFilter] = useState<string>('all')
-  const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [search, setSearch] = useState<string>('')
+  const [previewProposal, setPreviewProposal] = useState<FullProposal | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Proposal | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [showConfetti, setShowConfetti] = useState(false)
+
+  const filteredProposals = useMemo(() => {
+    let result = proposals
+
+    if (statusFilter !== 'all') {
+      result = result.filter((p) => p.status === statusFilter)
+    }
+
+    if (search.trim()) {
+      const term = search.toLowerCase()
+      result = result.filter(
+        (p) =>
+          p.proposal_number.toLowerCase().includes(term) ||
+          p.project_title.toLowerCase().includes(term) ||
+          (p.customer_name || '').toLowerCase().includes(term) ||
+          (p.customer_contact || '').toLowerCase().includes(term) ||
+          (p.customer_address || '').toLowerCase().includes(term)
+      )
+    }
+
+    return result
+  }, [proposals, statusFilter, search])
 
   useEffect(() => {
     async function fetchProposals() {
@@ -70,126 +117,266 @@ export function ProposalsTable() {
     fetchProposals()
   }, [])
 
-  const filteredProposals = useMemo(() => {
-    return proposals.filter((proposal) => {
-      const matchesFilter =
-        activeFilter === 'all' ? true : proposal.status === activeFilter
-      const matchesQuery =
-        proposal.customer_name.toLowerCase().includes(query.toLowerCase()) ||
-        proposal.project_title.toLowerCase().includes(query.toLowerCase()) ||
-        proposal.proposal_number.toLowerCase().includes(query.toLowerCase())
+  const handleStatusChange = async (proposal: Proposal, newStatus: string) => {
+    if (newStatus === proposal.status) return
+    setUpdatingStatus(proposal.id)
+    try {
+      const response = await fetch(`/api/proposals/${proposal.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        setProposals((prev) =>
+          prev.map((p) => (p.id === proposal.id ? { ...p, status: newStatus } : p))
+        )
+        if (newStatus === 'approved') {
+          const jobId = `JOB-${proposal.id}`
 
-      return matchesFilter && matchesQuery
-    })
-  }, [proposals, activeFilter, query])
+          // Fetch full proposal to get description, location, timeline
+          let projectDescription = ''
+          let projectLocation = proposal.customer_address
+          let projectTimeline = ''
+          try {
+            const fullRes = await fetch(`/api/proposals/${proposal.id}`)
+            const fullData = await fullRes.json()
+            if (fullData.success && fullData.proposal) {
+              projectDescription = [
+                fullData.proposal.project_description,
+                fullData.proposal.project_timeline ? `Timeline: ${fullData.proposal.project_timeline}` : '',
+              ].filter(Boolean).join('\n\n')
+              projectLocation = fullData.proposal.project_location || proposal.customer_address
+              projectTimeline = fullData.proposal.project_timeline || ''
+            }
+          } catch {
+            // non-fatal — proceed with basic data
+          }
+
+          await offlineStorage.saveJob({
+            id: jobId,
+            jobNumber: `JOB-${proposal.proposal_number}`,
+            title: proposal.project_title,
+            status: 'scheduled',
+            customerId: proposal.customer_name || proposal.customer_contact,
+            customerName: proposal.customer_name || proposal.customer_contact,
+            technicianId: 'unassigned',
+            scheduledDate: new Date().toISOString().split('T')[0],
+            value: proposal.total,
+            location: { address: projectLocation },
+            description: projectDescription,
+            notes: projectTimeline ? `Timeline: ${projectTimeline}` : undefined,
+            syncStatus: 'pending',
+          })
+          setShowConfetti(true)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update proposal status:', err)
+    } finally {
+      setUpdatingStatus(null)
+    }
+  }
+
+  const handleDownloadPDF = async (id: string) => {
+    try {
+      const response = await fetch(`/api/proposals/${id}`)
+      const data = await response.json()
+      if (data.success) {
+        setPreviewProposal(data.proposal)
+      }
+    } catch (err) {
+      console.error('Failed to fetch proposal for PDF:', err)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/proposals/${deleteTarget.id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        setProposals((prev) => prev.filter((p) => p.id !== deleteTarget.id))
+        setDeleteTarget(null)
+      }
+    } catch (err) {
+      console.error('Failed to delete proposal:', err)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleEmail = (proposal: Proposal) => {
+    const subject = encodeURIComponent(
+      `Proposal ${proposal.proposal_number}: ${proposal.project_title}`
+    )
+    const body = encodeURIComponent(
+      `Please find attached the proposal ${proposal.proposal_number} for ${proposal.project_title}.\n\nTotal: ${formatCurrency(proposal.total)}\n\nPlease let us know if you have any questions.`
+    )
+    window.open(`mailto:${proposal.customer_email || ''}?subject=${subject}&body=${body}`)
+  }
 
   if (loading) {
     return (
-      <div className="rounded-[32px] border border-[var(--border)] bg-white p-12 text-center text-[var(--text-muted)]">
-        Loading proposals…
+      <div className="bg-white shadow rounded-lg p-12 text-center">
+        <div className="text-gray-500">Loading proposals...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="rounded-[32px] border border-[var(--border)] bg-white p-12 text-center text-[#b42318]">
-        {error}
+      <div className="bg-white shadow rounded-lg p-12 text-center">
+        <div className="text-red-600">{error}</div>
+      </div>
+    )
+  }
+
+  if (proposals.length === 0) {
+    return (
+      <div className="bg-white shadow rounded-lg p-12 text-center">
+        <div className="text-gray-500">No proposals yet. Create your first one!</div>
       </div>
     )
   }
 
   return (
-    <section className="rounded-[32px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]">
-      <header className="flex flex-wrap items-center gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">All proposals</p>
-          <p className="text-2xl font-[Manrope] text-[var(--text)]">
-            {filteredProposals.length || 'No'} records
-          </p>
+    <>
+      {showConfetti && (
+        <ConfettiCelebration onComplete={() => {
+          setShowConfetti(false)
+          router.push('/jobs')
+        }} />
+      )}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-900">All Proposals</h3>
+            <div className="flex items-center space-x-2">
+              <select
+                className="rounded-md border-gray-300 text-sm"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="draft">Draft</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="declined">Declined</option>
+              </select>
+              <input
+                type="search"
+                placeholder="Search proposals..."
+                className="rounded-md border-gray-300 text-sm"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
         </div>
-        <div className="ml-auto flex flex-wrap items-center gap-3">
-          <label className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-            <input
-              type="search"
-              placeholder="Search customers or numbers"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="h-12 rounded-full border border-[var(--border)] bg-[var(--surface)] pl-10 pr-4 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:border-[#0c6cf2]"
-            />
-          </label>
-          <span className="hidden items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-xs text-[var(--text-muted)] md:inline-flex">
-            <Filter className="h-4 w-4" /> Filters
-          </span>
-        </div>
-      </header>
 
-      <div className="mt-6 flex flex-wrap gap-2 text-xs">
-        {filters.map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setActiveFilter(filter)}
-            className={`rounded-full border px-3 py-1 capitalize ${
-              activeFilter === filter
-                ? 'border-[#0c6cf2] bg-[#e3f3ff] text-[#0c6cf2]'
-                : 'border-[var(--border)] text-[var(--text-muted)]'
-            }`}
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
-
-      {filteredProposals.length === 0 ? (
-        <div className="mt-10 rounded-3xl border border-dashed border-[var(--border)] p-12 text-center text-[var(--text-muted)]">
-          Nothing matches your filters. Try clearing search.
-        </div>
-      ) : (
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full text-sm text-[var(--text)]">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">
-                <th className="pb-3 pr-4 font-medium">Proposal</th>
-                <th className="pb-3 pr-4 font-medium">Customer</th>
-                <th className="pb-3 pr-4 font-medium">Value</th>
-                <th className="pb-3 pr-4 font-medium">Status</th>
-                <th className="pb-3 pr-4 font-medium">Last activity</th>
-                <th className="pb-3 font-medium text-right">Actions</th>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Proposal
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Value
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="relative px-6 py-3">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredProposals.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                    No proposals match your filters.
+                  </td>
+                </tr>
+              )}
               {filteredProposals.map((proposal) => (
-                <tr key={proposal.id} className="align-top">
-                  <td className="py-4 pr-4">
-                    <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">{proposal.proposal_number}</p>
-                    <p className="font-semibold">{proposal.project_title}</p>
-                    <p className="text-xs text-[var(--text-muted)]">Created {formatDate(proposal.created_at)}</p>
-                  </td>
-                  <td className="py-4 pr-4">
-                    <p className="font-medium">{proposal.customer_name}</p>
-                    <p className="text-xs text-[var(--text-muted)]">Operations · Tier 2</p>
-                  </td>
-                  <td className="py-4 pr-4 font-semibold">{formatCurrency(proposal.total)}</td>
-                  <td className="py-4 pr-4">
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${statusTokens[proposal.status]?.color ?? 'bg-[var(--surface-alt)] text-[var(--text)]'}`}>
-                      {statusTokens[proposal.status]?.label ?? proposal.status}
-                    </span>
-                  </td>
-                  <td className="py-4 pr-4 text-[var(--text-muted)]">
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-[#0c6cf2]" />
-                      {proposal.viewed_at ? 'Opened' : 'No views yet'}
+                <tr
+                  key={proposal.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => router.push(`/proposals/${proposal.id}/edit`)}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {proposal.proposal_number}
                     </div>
-                    <p className="text-xs">{formatDate(proposal.viewed_at || null)}</p>
+                    <div className="text-sm text-gray-600">
+                      {proposal.project_title}
+                    </div>
                   </td>
-                  <td className="py-4 text-right">
-                    <div className="inline-flex flex-wrap gap-2">
-                      {[Edit, Download, Send, MoreHorizontal].map((Icon, idx) => (
-                        <button key={idx} className="inline-flex min-h-[42px] min-w-[42px] items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[#0c6cf2]">
-                          <Icon className="h-4 w-4" />
-                        </button>
-                      ))}
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {proposal.customer_name || proposal.customer_contact}
+                    </div>
+                    <div className="text-sm text-gray-500">{proposal.customer_address}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {formatCurrency(proposal.total)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <select
+                      value={proposal.status}
+                      onChange={(e) => handleStatusChange(proposal, e.target.value)}
+                      disabled={updatingStatus === proposal.id}
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${statusStyles[proposal.status as keyof typeof statusStyles] ?? 'bg-gray-100 text-gray-800'}`}
+                    >
+                      <option value="draft">Draft</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="declined">Declined</option>
+                    </select>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/proposals/${proposal.id}/edit`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                        title="Edit proposal"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDownloadPDF(proposal.id)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                        title="Download PDF"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download PDF
+                      </button>
+                      <button
+                        onClick={() => handleEmail(proposal)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+                        title="Email proposal"
+                      >
+                        <Mail className="h-3.5 w-3.5" />
+                        Email
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(proposal)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                        title="Delete proposal"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -197,7 +384,87 @@ export function ProposalsTable() {
             </tbody>
           </table>
         </div>
+
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              Showing {filteredProposals.length} of {proposals.length} {proposals.length === 1 ? 'proposal' : 'proposals'}
+            </div>
+            <div className="flex items-center space-x-2">
+              <button className="px-3 py-1 text-sm border rounded-md disabled:opacity-50" disabled>
+                Previous
+              </button>
+              <button className="px-3 py-1 text-sm border rounded-md">
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDeleteTarget(null)} />
+          <div className="relative z-10 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h2 className="text-base font-semibold text-gray-900">Delete Proposal</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure want to delete this proposal?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-    </section>
+
+      {/* PDF Preview Modal */}
+      {previewProposal && (
+        <ProposalPreview
+          proposalNumber={previewProposal.proposal_number}
+          customer={{
+            name: previewProposal.customer_name,
+            contact: previewProposal.customer_contact,
+            email: previewProposal.customer_email,
+            address: previewProposal.customer_address,
+          }}
+          projectDetails={{
+            title: previewProposal.project_title,
+            description: previewProposal.project_description,
+            location: previewProposal.project_location,
+            timeline: previewProposal.project_timeline,
+          }}
+          items={previewProposal.items.map((item) => ({
+            id: item.id,
+            category: item.category,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unit_price,
+            total: item.total,
+          }))}
+          subtotal={previewProposal.subtotal}
+          tax={previewProposal.tax_amount}
+          total={previewProposal.total}
+          onClose={() => setPreviewProposal(null)}
+        />
+      )}
+    </>
   )
 }

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Eye, Clock, DollarSign, Activity } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Clock, DollarSign } from 'lucide-react'
+import Link from 'next/link'
 
 interface Proposal {
   id: string
@@ -11,25 +11,32 @@ interface Proposal {
   total: number
   status: string
   created_at: string
-  viewed_at?: string | null
 }
 
-const pillTone: Record<string, string> = {
-  signed: 'bg-[#e3f3ff] text-[#0c6cf2]',
-  pending: 'bg-[#fef4e6] text-[#b76a00]',
-  viewed: 'bg-[#eefbf9] text-[#0f766e]',
+const statusStyles: Record<string, string> = {
+  draft: 'bg-gray-100 text-gray-800',
+  pending: 'bg-yellow-100 text-yellow-800',
+  approved: 'bg-green-100 text-green-800',
+  declined: 'bg-red-100 text-red-800',
 }
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', {
+const ACTIVE_STATUSES = ['pending', 'approved']
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
   }).format(amount)
+}
 
-const stamp = (dateStr: string) => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+function timeAgo(dateStr: string) {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (diff < 60) return 'Just now'
+  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`
+  if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`
+  return `${Math.floor(diff / 604800)} weeks ago`
 }
 
 export function ActiveProposals() {
@@ -42,7 +49,10 @@ export function ActiveProposals() {
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          setProposals(data.proposals.slice(0, 4))
+          const active = (data.proposals as Proposal[]).filter((p) =>
+            ACTIVE_STATUSES.includes(p.status)
+          )
+          setProposals(active)
         } else {
           setError('Failed to load proposals')
         }
@@ -51,68 +61,69 @@ export function ActiveProposals() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) {
-    return (
-      <section className="rounded-[32px] border border-[var(--border)] bg-white p-6 text-center text-[var(--text-muted)]">
-        Loading proposals…
-      </section>
-    )
-  }
-
-  if (error) {
-    return (
-      <section className="rounded-[32px] border border-[var(--border)] bg-white p-6 text-center text-[#b42318]">
-        {error}
-      </section>
-    )
-  }
-
   return (
-    <section className="rounded-[32px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">Proposal radar</p>
-          <h3 className="mt-2 text-2xl font-[Manrope] text-[var(--text)]">Active pursuits</h3>
+    <div className="bg-white shadow rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">Active Proposals</h3>
+          <span className="text-sm text-gray-500">
+            {loading ? '…' : `${proposals.length} total`}
+          </span>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--text-muted)]">
-          <Activity className="h-3.5 w-3.5 text-[#0c6cf2]" />
-          {proposals.length} live
-        </span>
-      </div>
 
-      <div className="mt-6 space-y-4">
-        {proposals.map((proposal) => (
-          <article key={proposal.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.4em] text-[var(--text-muted)]">{proposal.id}</p>
-                <h4 className="mt-1 text-lg font-semibold text-[var(--text)]">{proposal.customer_name}</h4>
-                <p className="text-sm text-[var(--text-muted)]">{proposal.project_title}</p>
-              </div>
-              <div className="text-right text-sm text-[var(--text-muted)]">
-                <p className="text-lg font-semibold text-[var(--text)]">{formatCurrency(proposal.total)}</p>
-                <p className={cn('inline-flex rounded-full px-3 py-1 text-xs font-medium', pillTone[proposal.status] ?? 'bg-[var(--surface-alt)] text-[var(--text)]')}>
-                  {proposal.status}
-                </p>
+        {loading && (
+          <p className="text-sm text-gray-500 py-4 text-center">Loading…</p>
+        )}
+
+        {error && (
+          <p className="text-sm text-red-500 py-4 text-center">{error}</p>
+        )}
+
+        {!loading && !error && proposals.length === 0 && (
+          <p className="text-sm text-gray-500 py-4 text-center">No active proposals</p>
+        )}
+
+        <div className="space-y-4">
+          {proposals.slice(0, 4).map((proposal) => (
+            <div key={proposal.id} className="border-l-4 border-blue-400 pl-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-gray-900">
+                      {proposal.customer_name}
+                    </p>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[proposal.status] ?? 'bg-gray-100 text-gray-800'}`}
+                    >
+                      {proposal.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">{proposal.project_title}</p>
+                  <div className="flex items-center mt-1 space-x-4 text-xs text-gray-500">
+                    <div className="flex items-center">
+                      <DollarSign className="h-3 w-3 mr-1" />
+                      {formatCurrency(proposal.total)}
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {timeAgo(proposal.created_at)}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-3 text-xs text-[var(--text-muted)]">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-3 w-3 text-[#0c6cf2]" />
-                Created {stamp(proposal.created_at)}
-              </div>
-              <div className="flex items-center gap-2">
-                <Eye className="h-3 w-3 text-[#0c6cf2]" />
-                {proposal.viewed_at ? `Viewed ${stamp(proposal.viewed_at)}` : 'No views'}
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-3 w-3 text-[#7a7a71]" />
-                SLA 12h
-              </div>
-            </div>
-          </article>
-        ))}
+          ))}
+        </div>
+
+        <div className="mt-4">
+          <Link
+            href="/proposals"
+            className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+          >
+            View all proposals →
+          </Link>
+        </div>
       </div>
-    </section>
+    </div>
   )
 }

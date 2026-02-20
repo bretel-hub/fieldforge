@@ -1,38 +1,128 @@
 'use client'
 
-import { FileText, Camera, DollarSign, User, CheckCircle } from 'lucide-react'
+import { FileText, Camera, DollarSign, User, CheckCircle, Clock } from 'lucide-react'
 
 const activities = [
-  { id: 1, icon: FileText, color: '#0c6cf2', message: 'Riverside Restaurant signed Kitchen Electrical Work', detail: '$12,400 · 02:32' },
-  { id: 2, icon: Camera, color: '#14b8a6', message: 'Mike Johnson uploaded 8 roof photos', detail: 'Auto-sync · 03:18' },
-  { id: 3, icon: DollarSign, color: '#b76a00', message: 'Deposit cleared from Metro Health Clinic', detail: '$5,200 · Yesterday' },
-  { id: 4, icon: CheckCircle, color: '#0f9d58', message: 'Sarah Chen closed Office Park security install', detail: '09:54 Yesterday' },
-  { id: 5, icon: User, color: '#7a7a71', message: 'TechStart Coworking Space onboarding started', detail: '2 days ago' },
+  {
+    id: 1,
+    type: 'proposal_signed',
+    message: 'Riverside Restaurant signed proposal for Kitchen Electrical Work',
+    value: '$12,400',
+    time: '2 hours ago',
+    icon: FileText,
+    iconColor: 'text-green-600 bg-green-100',
+  },
+  {
+    id: 2,
+    type: 'job_photo_uploaded',
+    message: 'Mike Johnson uploaded 8 photos to Riverside Restaurant project',
+    time: '3 hours ago',
+    icon: Camera,
+    iconColor: 'text-blue-600 bg-blue-100',
+  },
+  {
+    id: 3,
+    type: 'proposal_viewed',
+    message: 'Downtown Office Complex viewed HVAC Installation proposal',
+    time: '1 day ago',
+    icon: FileText,
+    iconColor: 'text-yellow-600 bg-yellow-100',
+  },
+  {
+    id: 4,
+    type: 'payment_received',
+    message: 'Received $5,200 deposit from Metro Health Clinic',
+    value: '$5,200',
+    time: '1 day ago',
+    icon: DollarSign,
+    iconColor: 'text-green-600 bg-green-100',
+  },
+  {
+    id: 5,
+    type: 'job_completed',
+    message: 'Sarah Chen marked Office Park Building security installation as completed',
+    time: '2 days ago',
+    icon: CheckCircle,
+    iconColor: 'text-green-600 bg-green-100',
+  },
+  {
+    id: 6,
+    type: 'proposal_created',
+    message: 'New proposal created for ABC Manufacturing - Security System Upgrade',
+    value: '$45,300',
+    time: '3 days ago',
+    icon: FileText,
+    iconColor: 'text-blue-600 bg-blue-100',
+  },
+  {
+    id: 7,
+    type: 'job_started',
+    message: 'Dave Rodriguez started HVAC maintenance at Greenfield Apartments',
+    time: '4 days ago',
+    icon: Clock,
+    iconColor: 'text-yellow-600 bg-yellow-100',
+  },
+  {
+    id: 8,
+    type: 'customer_added',
+    message: 'New customer added: TechStart Coworking Space',
+    time: '5 days ago',
+    icon: User,
+    iconColor: 'text-purple-600 bg-purple-100',
+  },
 ]
 
 export function RecentActivity() {
   return (
-    <section className="rounded-[32px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]">
-      <h3 className="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">Event stream</h3>
-      <div className="mt-4 space-y-5">
-        {activities.map((activity, idx) => (
-          <div key={activity.id} className="relative pl-10">
-            {idx !== activities.length - 1 && (
-              <span className="absolute left-4 top-8 h-full w-px bg-[var(--surface-alt)]" />
-            )}
-            <span
-              className="absolute left-0 top-3 flex h-7 w-7 items-center justify-center rounded-full"
-              style={{ backgroundColor: `${activity.color}15`, color: activity.color }}
-            >
-              <activity.icon className="h-3.5 w-3.5" />
-            </span>
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-              <p className="text-sm text-[var(--text)]">{activity.message}</p>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">{activity.detail}</p>
-            </div>
-          </div>
-        ))}
+    <div className="bg-white shadow rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+        
+        <div className="flow-root">
+          <ul role="list" className="-mb-8">
+            {activities.map((activity, activityIdx) => (
+              <li key={activity.id}>
+                <div className="relative pb-8">
+                  {activityIdx !== activities.length - 1 ? (
+                    <span
+                      className="absolute left-5 top-5 -ml-px h-full w-0.5 bg-gray-200"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                  <div className="relative flex items-start space-x-3">
+                    <div className={`relative px-1 ${activity.iconColor} rounded-full flex h-10 w-10 items-center justify-center`}>
+                      <activity.icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-900">
+                            {activity.message}
+                            {activity.value && (
+                              <span className="ml-2 font-medium text-green-600">
+                                {activity.value}
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {activity.time}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+        <div className="mt-6">
+          <button className="text-sm text-blue-600 hover:text-blue-500 font-medium">
+            View all activity →
+          </button>
+        </div>
       </div>
-    </section>
+    </div>
   )
 }
