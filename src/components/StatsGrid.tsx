@@ -50,7 +50,7 @@ export function StatsGrid() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">{stat.name}</p>
-              <p className="mt-3 text-3xl font-[Space Grotesk] text-[var(--text-primary)]">{stat.value}</p>
+              <p className="mt-3 text-3xl font-['Sora'] text-[var(--text-primary)]">{stat.value}</p>
             </div>
             <span className="rounded-2xl bg-[var(--surface-alt)] p-3 text-[var(--accent)]">
               <stat.icon className="h-6 w-6" />

@@ -254,7 +254,7 @@ export function ProposalsTable() {
       <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/95 shadow-[var(--shadow-soft)] overflow-hidden">
         <div className="px-6 py-4 border-b border-[var(--border)]">
           <div className="flex flex-wrap items-center gap-3">
-            <h3 className="text-lg font-[Space Grotesk] text-[var(--text-primary)]">All Proposals</h3>
+            <h3 className="text-lg font-['Sora'] text-[var(--text-primary)]">All Proposals</h3>
             <div className="ml-auto flex flex-wrap items-center gap-2">
               <select
                 className="h-10 rounded-full border border-[var(--border)] bg-white px-3 text-sm text-[var(--text-secondary)]"

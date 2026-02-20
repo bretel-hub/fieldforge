@@ -39,11 +39,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex h-full flex-col gap-8">
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[var(--shadow-soft)]">
-          <span className="font-[Space Grotesk] text-base tracking-[0.25em] text-[var(--accent)]">FF</span>
+          <span className="font-['Sora'] text-base tracking-[0.25em] text-[var(--accent)]">FF</span>
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">FieldForge</p>
-          <p className="text-lg font-[Space Grotesk] text-[var(--text-primary)]">Operations</p>
+          <p className="text-lg font-['Sora'] text-[var(--text-primary)]">Operations</p>
         </div>
       </div>
       <nav className="space-y-2">
@@ -70,7 +70,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </nav>
       <div className="mt-auto rounded-2xl border border-[var(--border)] bg-white/90 p-4 shadow-[var(--shadow-soft)]">
         <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Status</p>
-        <p className="mt-2 text-lg font-[Space Grotesk] text-[var(--text-primary)]">Systems nominal</p>
+        <p className="mt-2 text-lg font-['Sora'] text-[var(--text-primary)]">Systems nominal</p>
         <p className="text-xs text-[var(--text-secondary)]">Latency 39ms · API OK</p>
       </div>
     </div>
