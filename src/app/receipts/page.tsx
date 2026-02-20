@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState, type ComponentType } from 'react'
 import { Camera, Loader2, Mail, UploadCloud, X, ClipboardCheck } from 'lucide-react'
 import Link from 'next/link'
+import { DashboardLayout } from '@/components/DashboardLayout'
 
 interface ReceiptRecord {
   id: string
@@ -160,6 +161,7 @@ export default function ReceiptsPage() {
   }
 
   return (
+    <DashboardLayout>
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -437,5 +439,6 @@ export default function ReceiptsPage() {
         </div>
       )}
     </div>
+    </DashboardLayout>
   )
 }
