@@ -256,10 +256,13 @@ export default function ReceiptsPage() {
       {selected && (
         <div className="fixed inset-0 z-40 flex items-start justify-end bg-black/30" onClick={() => setSelected(null)}>
           <div
-            className="h-full w-full max-w-md overflow-y-auto border-l border-[var(--border)] bg-white shadow-[var(--shadow-soft)]"
+            className="flex h-full w-full max-w-md flex-col border-l border-[var(--border)] bg-white shadow-[var(--shadow-soft)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+            <div
+              className="flex-none flex items-center justify-between border-b border-[var(--border)] px-6 py-4"
+              style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+            >
               <div>
                 <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Receipt</p>
                 <h2 className="text-lg font-[Space Grotesk] text-[var(--text-primary)]">{selected.vendor_name}</h2>
@@ -269,7 +272,10 @@ export default function ReceiptsPage() {
               </button>
             </div>
 
-            <div className="space-y-4 px-6 py-4 text-sm">
+            <div
+              className="flex-1 overflow-y-auto space-y-4 px-6 py-4 text-sm"
+              style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[var(--text-secondary)]">Total</span>
                 <span className="font-semibold text-[var(--text-primary)]">
@@ -328,10 +334,12 @@ export default function ReceiptsPage() {
       )}
 
       {showCapture && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCapture(false)}>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40" onClick={() => setShowCapture(false)}>
+          <div className="flex min-h-full items-end justify-center sm:items-center sm:p-6">
           <form
             onSubmit={handleCreateReceipt}
-            className="w-full max-w-lg space-y-4 rounded-[var(--radius-xl)] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]"
+            className="w-full max-w-lg space-y-4 rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-xl)] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]"
+            style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -437,6 +445,7 @@ export default function ReceiptsPage() {
               </button>
             </div>
           </form>
+          </div>
         </div>
       )}
     </div>
