@@ -4,28 +4,28 @@ import { DollarSign, FileText, Camera, TrendingUp } from 'lucide-react'
 
 const stats = [
   {
-    name: 'Total Revenue',
+    name: 'Total revenue',
     value: '$127,500',
     change: '+12.3% vs last cycle',
     tone: 'positive',
     icon: DollarSign,
   },
   {
-    name: 'Active Proposals',
+    name: 'Active proposals',
     value: '23',
     change: '3 escalated today',
-    tone: 'signal',
+    tone: 'info',
     icon: FileText,
   },
   {
-    name: 'Jobs in Progress',
+    name: 'Jobs in progress',
     value: '12',
     change: '8 near completion',
     tone: 'neutral',
     icon: Camera,
   },
   {
-    name: 'Win Rate',
+    name: 'Win rate',
     value: '68%',
     change: '+5.2% lift',
     tone: 'positive',
@@ -34,38 +34,35 @@ const stats = [
 ]
 
 const toneMap = {
-  positive: 'text-[#6CFFBA] bg-[#6cffba14]',
-  signal: 'text-[#51f4ff] bg-[#51f4ff14]',
-  neutral: 'text-white/70 bg-white/5',
+  positive: 'text-[#0c6cf2] bg-[#0c6cf20d]',
+  info: 'text-[#14b8a6] bg-[#14b8a60d]',
+  neutral: 'text-[#7a7a71] bg-[#7a7a7111]',
 }
 
 export function StatsGrid() {
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-      {stats.map((stat, index) => (
+      {stats.map((stat) => (
         <div
           key={stat.name}
-          className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[#090d16]/80 p-6 shadow-[inset_0_0_40px_rgba(255,255,255,0.02)]"
+          className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]"
         >
-          <div className="absolute inset-0 opacity-[0.08]" style={{
-            backgroundImage: `radial-gradient(circle at ${20 + index * 15}% 0%, var(--accent-cyan), transparent 55%)`
-          }} />
-          <div className="relative flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-white/50">{stat.name}</p>
-              <p className="mt-3 text-4xl font-[Chakra Petch] text-white">{stat.value}</p>
+              <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">{stat.name}</p>
+              <p className="mt-3 text-4xl font-[Manrope] text-[var(--text)]">{stat.value}</p>
             </div>
-            <span className="rounded-2xl border border-white/10 bg-white/5 p-3 text-white">
+            <span className="rounded-2xl bg-[var(--surface-alt)] p-3 text-[#0c6cf2]">
               <stat.icon className="h-6 w-6" />
             </span>
           </div>
           <p className={`mt-6 inline-flex rounded-full px-3 py-1 text-[13px] font-medium ${toneMap[stat.tone as keyof typeof toneMap]}`}>
             {stat.change}
           </p>
-          <div className="mt-4 h-[3px] w-full overflow-hidden rounded-full bg-white/5">
+          <div className="mt-4 h-[4px] w-full overflow-hidden rounded-full bg-[var(--surface-alt)]">
             <div
-              className="h-full bg-gradient-to-r from-[#f34aff] via-[#51f4ff] to-[#6cffba]"
-              style={{ width: `${60 + index * 10}%` }}
+              className="h-full rounded-full bg-gradient-to-r from-[#0c6cf2] via-[#14b8a6] to-[#7c3aed]"
+              style={{ width: stat.tone === 'neutral' ? '55%' : '80%' }}
             />
           </div>
         </div>

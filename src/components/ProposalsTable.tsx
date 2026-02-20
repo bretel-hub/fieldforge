@@ -15,11 +15,11 @@ interface Proposal {
 }
 
 const statusTokens: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Draft', color: 'text-white bg-white/10' },
-  pending: { label: 'Pending', color: 'text-[#f5b755] bg-[#f5b7551a]' },
-  viewed: { label: 'Viewed', color: 'text-[#51f4ff] bg-[#51f4ff1a]' },
-  signed: { label: 'Signed', color: 'text-[#6cffba] bg-[#6cffba1a]' },
-  declined: { label: 'Declined', color: 'text-[#f34aff] bg-[#f34aff1a]' },
+  draft: { label: 'Draft', color: 'text-[#7a7a71] bg-[#f3f1ed]' },
+  pending: { label: 'Pending', color: 'text-[#b76a00] bg-[#fef4e6]' },
+  viewed: { label: 'Viewed', color: 'text-[#0f766e] bg-[#eefbf9]' },
+  signed: { label: 'Signed', color: 'text-[#0c6cf2] bg-[#e3f3ff]' },
+  declined: { label: 'Declined', color: 'text-[#b42318] bg-[#feeceb]' },
 }
 
 const formatCurrency = (amount: number) =>
@@ -85,44 +85,43 @@ export function ProposalsTable() {
 
   if (loading) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-[#080c15]/80 p-12 text-center text-white/70">
-        Loading proposals...
+      <div className="rounded-[32px] border border-[var(--border)] bg-white p-12 text-center text-[var(--text-muted)]">
+        Loading proposals…
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-[#080c15]/80 p-12 text-center text-[#f34aff]">
+      <div className="rounded-[32px] border border-[var(--border)] bg-white p-12 text-center text-[#b42318]">
         {error}
       </div>
     )
   }
 
   return (
-    <section className="rounded-[32px] border border-white/10 bg-[#080c15]/80 p-6">
+    <section className="rounded-[32px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]">
       <header className="flex flex-wrap items-center gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-white/50">All proposals</p>
-          <p className="text-2xl font-[Chakra Petch] text-white">
+          <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">All proposals</p>
+          <p className="text-2xl font-[Manrope] text-[var(--text)]">
             {filteredProposals.length || 'No'} records
           </p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+          <label className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
               type="search"
               placeholder="Search customers or numbers"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="h-10 rounded-full border border-white/15 bg-white/5 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:border-white/30 focus:outline-none"
+              className="h-12 rounded-full border border-[var(--border)] bg-[var(--surface)] pl-10 pr-4 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:border-[#0c6cf2]"
             />
-          </div>
-          <div className="hidden items-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs uppercase tracking-[0.4em] text-white/60 md:inline-flex">
-            <Filter className="h-4 w-4" />
-            Filters
-          </div>
+          </label>
+          <span className="hidden items-center gap-2 rounded-full border border-[var(--border)] px-3 py-2 text-xs text-[var(--text-muted)] md:inline-flex">
+            <Filter className="h-4 w-4" /> Filters
+          </span>
         </div>
       </header>
 
@@ -131,10 +130,10 @@ export function ProposalsTable() {
           <button
             key={filter}
             onClick={() => setActiveFilter(filter)}
-            className={`rounded-full border px-3 py-1 capitalize transition ${
+            className={`rounded-full border px-3 py-1 capitalize ${
               activeFilter === filter
-                ? 'border-white bg-white text-[#0f1729]'
-                : 'border-white/15 text-white/60 hover:border-white/40'
+                ? 'border-[#0c6cf2] bg-[#e3f3ff] text-[#0c6cf2]'
+                : 'border-[var(--border)] text-[var(--text-muted)]'
             }`}
           >
             {filter}
@@ -143,70 +142,60 @@ export function ProposalsTable() {
       </div>
 
       {filteredProposals.length === 0 ? (
-        <div className="mt-8 rounded-3xl border border-dashed border-white/10 p-12 text-center text-white/60">
-          Nothing matches your filters. Try switching the segment or clearing search.
+        <div className="mt-10 rounded-3xl border border-dashed border-[var(--border)] p-12 text-center text-[var(--text-muted)]">
+          Nothing matches your filters. Try clearing search.
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-3xl border border-white/5">
-          <div className="hidden bg-white/5 px-6 py-4 text-xs uppercase tracking-[0.4em] text-white/50 md:grid md:grid-cols-[1.6fr_1fr_1fr_0.8fr_0.8fr_0.5fr]">
-            <span>Proposal</span>
-            <span>Customer</span>
-            <span>Value</span>
-            <span>Status</span>
-            <span>Last activity</span>
-            <span className="text-right">Actions</span>
-          </div>
-          <div className="divide-y divide-white/5">
-            {filteredProposals.map((proposal) => (
-              <article
-                key={proposal.id}
-                className="grid gap-6 bg-[#090f1a] px-6 py-5 text-sm text-white md:grid-cols-[1.6fr_1fr_1fr_0.8fr_0.8fr_0.5fr]"
-              >
-                <div>
-                  <p className="text-xs uppercase tracking-[0.4em] text-white/40">
-                    {proposal.proposal_number}
-                  </p>
-                  <p className="mt-1 font-semibold">{proposal.project_title}</p>
-                  <p className="text-xs text-white/50">Created {formatDate(proposal.created_at)}</p>
-                </div>
-                <div>
-                  <p className="font-medium">{proposal.customer_name}</p>
-                  <p className="text-xs text-white/50">Operations · Tier 2</p>
-                </div>
-                <div className="font-semibold">{formatCurrency(proposal.total)}</div>
-                <div>
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${
-                      statusTokens[proposal.status]?.color ?? 'bg-white/10 text-white'
-                    }`}
-                  >
-                    {statusTokens[proposal.status]?.label ?? proposal.status}
-                  </span>
-                </div>
-                <div className="text-white/70">
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-[#51f4ff]" />
-                    {proposal.viewed_at ? 'Opened' : 'No views yet'}
-                  </div>
-                  <p className="text-xs text-white/40">{formatDate(proposal.viewed_at || null)}</p>
-                </div>
-                <div className="flex items-center justify-end gap-2 text-white/60">
-                  <button className="rounded-full border border-white/15 p-2 hover:text-white">
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button className="rounded-full border border-white/15 p-2 hover:text-white">
-                    <Download className="h-4 w-4" />
-                  </button>
-                  <button className="rounded-full border border-white/15 p-2 hover:text-white">
-                    <Send className="h-4 w-4" />
-                  </button>
-                  <button className="rounded-full border border-white/15 p-2 hover:text-white">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full text-sm text-[var(--text)]">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">
+                <th className="pb-3 pr-4 font-medium">Proposal</th>
+                <th className="pb-3 pr-4 font-medium">Customer</th>
+                <th className="pb-3 pr-4 font-medium">Value</th>
+                <th className="pb-3 pr-4 font-medium">Status</th>
+                <th className="pb-3 pr-4 font-medium">Last activity</th>
+                <th className="pb-3 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border)]">
+              {filteredProposals.map((proposal) => (
+                <tr key={proposal.id} className="align-top">
+                  <td className="py-4 pr-4">
+                    <p className="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">{proposal.proposal_number}</p>
+                    <p className="font-semibold">{proposal.project_title}</p>
+                    <p className="text-xs text-[var(--text-muted)]">Created {formatDate(proposal.created_at)}</p>
+                  </td>
+                  <td className="py-4 pr-4">
+                    <p className="font-medium">{proposal.customer_name}</p>
+                    <p className="text-xs text-[var(--text-muted)]">Operations · Tier 2</p>
+                  </td>
+                  <td className="py-4 pr-4 font-semibold">{formatCurrency(proposal.total)}</td>
+                  <td className="py-4 pr-4">
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${statusTokens[proposal.status]?.color ?? 'bg-[var(--surface-alt)] text-[var(--text)]'}`}>
+                      {statusTokens[proposal.status]?.label ?? proposal.status}
+                    </span>
+                  </td>
+                  <td className="py-4 pr-4 text-[var(--text-muted)]">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-[#0c6cf2]" />
+                      {proposal.viewed_at ? 'Opened' : 'No views yet'}
+                    </div>
+                    <p className="text-xs">{formatDate(proposal.viewed_at || null)}</p>
+                  </td>
+                  <td className="py-4 text-right">
+                    <div className="inline-flex flex-wrap gap-2">
+                      {[Edit, Download, Send, MoreHorizontal].map((Icon, idx) => (
+                        <button key={idx} className="inline-flex min-h-[42px] min-w-[42px] items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[#0c6cf2]">
+                          <Icon className="h-4 w-4" />
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </section>
