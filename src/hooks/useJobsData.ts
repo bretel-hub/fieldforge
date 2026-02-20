@@ -30,19 +30,30 @@ async function syncApprovedProposalsToJobs(): Promise<void> {
       let customerContact = proposal.customer_contact || ''
       let customerEmail = proposal.customer_email || ''
       let customerAddress = proposal.customer_address || ''
+      let lineItems: Array<{ id: string; category: string; description: string; quantity: number; unitPrice: number; total: number }> = []
+      let subtotal: number | undefined
+      let taxAmount: number | undefined
       try {
         const fullRes = await fetch(`/api/proposals/${proposal.id}`)
         const fullData = await fullRes.json()
         if (fullData.success && fullData.proposal) {
-          projectDescription = [
-            fullData.proposal.project_description,
-            fullData.proposal.project_timeline ? `Timeline: ${fullData.proposal.project_timeline}` : '',
-          ].filter(Boolean).join('\n\n')
-          projectLocation = fullData.proposal.project_location || proposal.customer_address || ''
-          projectTimeline = fullData.proposal.project_timeline || ''
-          customerContact = fullData.proposal.customer_contact || customerContact
-          customerEmail = fullData.proposal.customer_email || customerEmail
-          customerAddress = fullData.proposal.customer_address || customerAddress
+          const fp = fullData.proposal
+          projectDescription = fp.project_description || ''
+          projectLocation = fp.project_location || proposal.customer_address || ''
+          projectTimeline = fp.project_timeline || ''
+          customerContact = fp.customer_contact || customerContact
+          customerEmail = fp.customer_email || customerEmail
+          customerAddress = fp.customer_address || customerAddress
+          subtotal = fp.subtotal
+          taxAmount = fp.tax_amount
+          lineItems = (fp.items ?? []).map((item: any) => ({
+            id: item.id,
+            category: item.category,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unit_price,
+            total: item.total,
+          }))
         }
       } catch {
         // non-fatal
@@ -65,7 +76,9 @@ async function syncApprovedProposalsToJobs(): Promise<void> {
         description: projectDescription,
         projectTimeline: projectTimeline || undefined,
         projectLocation: projectLocation || undefined,
-        notes: projectTimeline ? `Timeline: ${projectTimeline}` : undefined,
+        lineItems: lineItems.length > 0 ? lineItems : undefined,
+        subtotal,
+        taxAmount,
         syncStatus: 'synced',
       })
     }

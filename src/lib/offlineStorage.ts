@@ -36,7 +36,22 @@ export interface StoredJob {
   description: string
   projectTimeline?: string
   projectLocation?: string
+  lineItems?: Array<{
+    id: string
+    category: string
+    description: string
+    quantity: number
+    unitPrice: number
+    total: number
+  }>
+  subtotal?: number
+  taxAmount?: number
   notes?: string
+  noteEntries?: Array<{
+    id: string
+    text: string
+    timestamp: string
+  }>
   photos?: string[]
   syncStatus: 'synced' | 'pending' | 'failed'
   lastModified: number

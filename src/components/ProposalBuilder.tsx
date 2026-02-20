@@ -143,6 +143,16 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
             description: projectDetails.description,
             projectTimeline: projectDetails.timeline || undefined,
             projectLocation: projectDetails.location || undefined,
+            lineItems: items.length > 0 ? items.map(item => ({
+              id: item.id,
+              category: item.category,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total,
+            })) : undefined,
+            subtotal,
+            taxAmount: tax,
             syncStatus: 'pending',
           })
           setShowConfetti(true)
