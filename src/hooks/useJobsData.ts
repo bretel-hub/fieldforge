@@ -27,6 +27,9 @@ async function syncApprovedProposalsToJobs(): Promise<void> {
       let projectDescription = ''
       let projectLocation = proposal.customer_address || ''
       let projectTimeline = ''
+      let customerContact = proposal.customer_contact || ''
+      let customerEmail = proposal.customer_email || ''
+      let customerAddress = proposal.customer_address || ''
       try {
         const fullRes = await fetch(`/api/proposals/${proposal.id}`)
         const fullData = await fullRes.json()
@@ -37,6 +40,9 @@ async function syncApprovedProposalsToJobs(): Promise<void> {
           ].filter(Boolean).join('\n\n')
           projectLocation = fullData.proposal.project_location || proposal.customer_address || ''
           projectTimeline = fullData.proposal.project_timeline || ''
+          customerContact = fullData.proposal.customer_contact || customerContact
+          customerEmail = fullData.proposal.customer_email || customerEmail
+          customerAddress = fullData.proposal.customer_address || customerAddress
         }
       } catch {
         // non-fatal
@@ -49,11 +55,16 @@ async function syncApprovedProposalsToJobs(): Promise<void> {
         status: 'scheduled',
         customerId: proposal.customer_name || proposal.customer_contact,
         customerName: proposal.customer_name || proposal.customer_contact,
+        customerContact,
+        customerEmail,
+        customerAddress,
         technicianId: 'unassigned',
         scheduledDate: new Date().toISOString().split('T')[0],
         value: proposal.total,
         location: { address: projectLocation },
         description: projectDescription,
+        projectTimeline: projectTimeline || undefined,
+        projectLocation: projectLocation || undefined,
         notes: projectTimeline ? `Timeline: ${projectTimeline}` : undefined,
         syncStatus: 'synced',
       })

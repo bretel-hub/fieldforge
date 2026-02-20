@@ -15,6 +15,10 @@ export interface StoredJob {
   status: JobStatus
   customerId: string
   customerName: string
+  customerContact?: string
+  customerEmail?: string
+  customerPhone?: string
+  customerAddress?: string
   technicianId: string
   technicianName?: string
   scheduledDate: string
@@ -30,6 +34,8 @@ export interface StoredJob {
     coordinates?: [number, number]
   }
   description: string
+  projectTimeline?: string
+  projectLocation?: string
   notes?: string
   photos?: string[]
   syncStatus: 'synced' | 'pending' | 'failed'

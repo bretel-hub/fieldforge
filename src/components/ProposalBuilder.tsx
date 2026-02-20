@@ -133,11 +133,16 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
             status: 'scheduled',
             customerId: customer.name || customer.contact,
             customerName: customer.name || customer.contact,
+            customerContact: customer.contact || undefined,
+            customerEmail: customer.email || undefined,
+            customerAddress: customer.address || undefined,
             technicianId: 'unassigned',
             scheduledDate: new Date().toISOString().split('T')[0],
             value: total,
-            location: { address: customer.address },
+            location: { address: projectDetails.location || customer.address },
             description: projectDetails.description,
+            projectTimeline: projectDetails.timeline || undefined,
+            projectLocation: projectDetails.location || undefined,
             syncStatus: 'pending',
           })
           setShowConfetti(true)

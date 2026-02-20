@@ -7,6 +7,7 @@ import { PhotoCaptureComponent } from '@/components/PhotoCapture'
 import {
   Camera, MapPin, Clock, User, Loader2, ArrowLeft,
   DollarSign, CheckCircle2, AlertCircle, FileText, Save,
+  Mail, Phone, Building2, CalendarDays,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PhotoCapture } from '@/lib/cameraService'
@@ -185,11 +186,11 @@ export default function JobDetailPage() {
           </div>
         </div>
 
-        {/* Job Details (from Proposal) */}
+        {/* Customer Information */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-base font-semibold text-gray-900 mb-5 flex items-center gap-2">
-            <FileText className="h-4 w-4 text-gray-400" />
-            Job Details
+            <Building2 className="h-4 w-4 text-gray-400" />
+            Customer Information
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -201,10 +202,62 @@ export default function JobDetailPage() {
                   <p className="text-gray-900 font-medium">{job.customerName || '—'}</p>
                 </div>
               </div>
+              {job.customerContact && job.customerContact !== job.customerName && (
+                <div className="flex items-start gap-3">
+                  <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Contact</p>
+                    <p className="text-gray-900">{job.customerContact}</p>
+                  </div>
+                </div>
+              )}
+              {job.customerEmail && (
+                <div className="flex items-start gap-3">
+                  <Mail className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Email</p>
+                    <a href={`mailto:${job.customerEmail}`} className="text-blue-600 hover:underline">{job.customerEmail}</a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {job.customerPhone && (
+                <div className="flex items-start gap-3">
+                  <Phone className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Phone</p>
+                    <a href={`tel:${job.customerPhone}`} className="text-blue-600 hover:underline">{job.customerPhone}</a>
+                  </div>
+                </div>
+              )}
+              {job.customerAddress && (
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Address</p>
+                    <p className="text-gray-900">{job.customerAddress}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Project Details */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-5 flex items-center gap-2">
+            <FileText className="h-4 w-4 text-gray-400" />
+            Project Details
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Location</p>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Job Location</p>
                   <p className="text-gray-900">{address}</p>
                 </div>
               </div>
@@ -215,6 +268,15 @@ export default function JobDetailPage() {
                   <p className="text-gray-900 font-semibold text-green-700">{formatCurrency(job.value)}</p>
                 </div>
               </div>
+              {job.projectTimeline && (
+                <div className="flex items-start gap-3">
+                  <CalendarDays className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Timeline</p>
+                    <p className="text-gray-900">{job.projectTimeline}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
