@@ -6,7 +6,7 @@ import { DashboardLayout } from '@/components/DashboardLayout'
 import { PhotoCaptureComponent } from '@/components/PhotoCapture'
 import {
   Camera, MapPin, User, Loader2, ArrowLeft,
-  DollarSign, CheckCircle2, AlertCircle, FileText, Save,
+  DollarSign, CheckCircle2, AlertCircle, Save,
   Mail, Phone, Building2, CalendarDays, ChevronDown, ChevronUp,
   StickyNote, Plus,
 } from 'lucide-react'
@@ -228,13 +228,14 @@ export default function JobDetailPage() {
           </div>
         </div>
 
-        {/* ── Customer Information ── */}
+        {/* ── Customer & Project Details ── */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-base font-semibold text-gray-900 mb-5 flex items-center gap-2">
             <Building2 className="h-4 w-4 text-gray-400" />
-            Customer Information
+            Customer & Project Details
           </h2>
 
+          {/* Customer info grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
             {/* Left col */}
             <div className="space-y-4">
@@ -287,16 +288,11 @@ export default function JobDetailPage() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* ── Project Details ── */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-5 flex items-center gap-2">
-            <FileText className="h-4 w-4 text-gray-400" />
-            Project Details
-          </h2>
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-5" />
 
-          {/* Title + Description */}
+          {/* Project details */}
           <div className="mb-5">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Project Title</p>
             <p className="text-gray-900 font-semibold text-base">{job.title}</p>
