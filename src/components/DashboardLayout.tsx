@@ -82,7 +82,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/20" onClick={() => setSidebarOpen(false)} />
-          <div className="relative ml-auto flex h-full w-72 flex-col bg-[var(--surface)] px-6 py-8 shadow-2xl">
+          <div className="relative flex h-full w-72 flex-col bg-[var(--surface)] px-6 py-8 shadow-2xl">
             <button
               onClick={() => setSidebarOpen(false)}
               className="ml-auto rounded-full border border-[var(--border)] p-2 text-[var(--text-secondary)]"
