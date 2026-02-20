@@ -185,86 +185,6 @@ export default function JobDetailPage() {
           </div>
         </div>
 
-        {/* Status & Progress */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-5">Status & Progress</h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                Status
-              </label>
-              <select
-                value={status}
-                onChange={(e) => { setStatus(e.target.value); setDirty(true) }}
-                className={`w-full rounded-lg border px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusColor}`}
-              >
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                Progress — {progress}%
-              </label>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={5}
-                value={progress}
-                onChange={(e) => { setProgress(Number(e.target.value)); setDirty(true) }}
-                className="w-full h-2 accent-blue-600 cursor-pointer"
-              />
-              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${
-                    status === 'complete'    ? 'bg-green-500'  :
-                    status === 'in-progress' ? 'bg-yellow-500' :
-                    status === 'on-hold'     ? 'bg-red-400'    :
-                    'bg-blue-500'
-                  }`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5">
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-              Add Update Note
-            </label>
-            <input
-              type="text"
-              value={newNote}
-              onChange={(e) => { setNewNote(e.target.value); setDirty(true) }}
-              placeholder="e.g. Completed phase 1, waiting on materials..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {(dirty || saveSuccess) && (
-            <div className="mt-4 flex items-center justify-end gap-3">
-              {saveSuccess && (
-                <span className="text-sm text-green-600 flex items-center gap-1">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Saved
-                </span>
-              )}
-              {dirty && (
-                <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
-                  {saving
-                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving…</>
-                    : <><Save className="h-4 w-4 mr-2" />Save Changes</>
-                  }
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* Job Details (from Proposal) */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-base font-semibold text-gray-900 mb-5 flex items-center gap-2">
@@ -337,6 +257,45 @@ export default function JobDetailPage() {
             <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
               <p className="text-xs font-medium text-yellow-700 uppercase tracking-wide mb-1">Notes & Updates</p>
               <p className="text-sm text-yellow-900 whitespace-pre-line">{job.notes}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Status */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-5">Status</h2>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+              Status
+            </label>
+            <select
+              value={status}
+              onChange={(e) => { setStatus(e.target.value); setDirty(true) }}
+              className={`w-full rounded-lg border px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusColor}`}
+            >
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {(dirty || saveSuccess) && (
+            <div className="mt-4 flex items-center justify-end gap-3">
+              {saveSuccess && (
+                <span className="text-sm text-green-600 flex items-center gap-1">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Saved
+                </span>
+              )}
+              {dirty && (
+                <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                  {saving
+                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving…</>
+                    : <><Save className="h-4 w-4 mr-2" />Save Changes</>
+                  }
+                </Button>
+              )}
             </div>
           )}
         </div>
