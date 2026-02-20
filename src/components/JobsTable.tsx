@@ -23,24 +23,6 @@ const statusStyles: Record<string, string> = {
   'on-hold':     'bg-red-100 text-red-800',
 }
 
-const filterStyles: Record<string, string> = {
-  'all':         'bg-gray-700 text-white',
-  'not-started': 'bg-gray-200 text-gray-800',
-  'scheduled':   'bg-blue-200 text-blue-800',
-  'in-progress': 'bg-yellow-200 text-yellow-800',
-  'complete':    'bg-green-200 text-green-800',
-  'on-hold':     'bg-red-200 text-red-800',
-}
-
-const filterActiveStyles: Record<string, string> = {
-  'all':         'bg-gray-700 text-white ring-2 ring-gray-400',
-  'not-started': 'bg-gray-300 text-gray-900 ring-2 ring-gray-400',
-  'scheduled':   'bg-blue-300 text-blue-900 ring-2 ring-blue-400',
-  'in-progress': 'bg-yellow-300 text-yellow-900 ring-2 ring-yellow-400',
-  'complete':    'bg-green-300 text-green-900 ring-2 ring-green-400',
-  'on-hold':     'bg-red-300 text-red-900 ring-2 ring-red-400',
-}
-
 const statusLabel = (status: string) =>
   STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status
 
@@ -223,21 +205,16 @@ export function JobsTable() {
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="px-6 py-3 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-1.5">
-              {[{ value: 'all', label: 'All' }, ...STATUS_OPTIONS].map((o) => (
-                <button
-                  key={o.value}
-                  onClick={() => setStatusFilter(o.value)}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-full transition-colors ${
-                    statusFilter === o.value
-                      ? filterActiveStyles[o.value]
-                      : filterStyles[o.value]
-                  }`}
-                >
-                  {o.label}
-                </button>
+            <select
+              className="h-9 rounded-full border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
               ))}
-            </div>
+            </select>
             <input
               type="search"
               placeholder="Search jobs..."
