@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Camera, MapPin, User, Calendar, Eye, Loader2, AlertTriangle } from 'lucide-react'
-import Link from 'next/link'
+import { Camera, MapPin, User, Calendar, Loader2, AlertTriangle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useJobsData } from '@/hooks/useJobsData'
 import { StoredJob, offlineStorage } from '@/lib/offlineStorage'
 import { JobCompleteCelebration } from '@/components/JobCompleteCelebration'
@@ -51,6 +51,7 @@ const normalizeStatus = (status?: StoredJob['status']) => {
 
 export function JobsTable() {
   const { jobs, loading, error, refresh } = useJobsData()
+  const router = useRouter()
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const [showCelebration, setShowCelebration] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -171,7 +172,11 @@ export function JobsTable() {
       const assignee     = job.technicianName ?? job.technicianId ?? 'Unassigned'
 
       return (
-        <tr key={job.id} className="hover:bg-gray-50">
+        <tr
+          key={job.id}
+          className="hover:bg-gray-50 cursor-pointer"
+          onClick={() => router.push(`/jobs/${job.id}`)}
+        >
           <td className="px-6 py-4 whitespace-nowrap">
             <div className="text-sm font-medium text-gray-900">{jobCode}</div>
             <div className="text-sm text-gray-600">{job.title}</div>
@@ -184,7 +189,7 @@ export function JobsTable() {
               {locationLabel}
             </div>
           </td>
-          <td className="px-6 py-4 whitespace-nowrap min-w-[160px]">
+          <td className="px-6 py-4 whitespace-nowrap min-w-[160px]" onClick={(e) => e.stopPropagation()}>
             {renderStatusCell(job)}
           </td>
           <td className="px-6 py-4 whitespace-nowrap">
@@ -207,15 +212,13 @@ export function JobsTable() {
               {timeline}
             </div>
           </td>
-          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-            <div className="flex items-center space-x-2">
-              <Link href={`/jobs/${job.id}`} className="text-blue-600 hover:text-blue-500">
-                <Eye className="h-4 w-4" />
-              </Link>
-              <Link href={`/jobs/${job.id}/photos`} className="text-green-600 hover:text-green-500">
-                <Camera className="h-4 w-4" />
-              </Link>
-            </div>
+          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => router.push(`/jobs/${job.id}`)}
+              className="text-blue-600 hover:text-blue-500 text-xs font-medium px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+            >
+              View Job
+            </button>
           </td>
         </tr>
       )
