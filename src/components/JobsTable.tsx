@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Camera, MapPin, User, Calendar, Loader2, AlertTriangle } from 'lucide-react'
+import { Camera, MapPin, Calendar, Loader2, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useJobsData } from '@/hooks/useJobsData'
 import { StoredJob, offlineStorage } from '@/lib/offlineStorage'
@@ -121,7 +121,7 @@ export function JobsTable() {
     if (loading) {
       return (
         <tr>
-          <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-500">
+          <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
             <div className="flex flex-col items-center space-y-3">
               <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
               <span>Loading job data…</span>
@@ -134,7 +134,7 @@ export function JobsTable() {
     if (error) {
       return (
         <tr>
-          <td colSpan={7} className="px-6 py-8">
+          <td colSpan={6} className="px-6 py-8">
             <div className="flex flex-col items-center text-sm text-red-600 space-y-3">
               <AlertTriangle className="h-5 w-5" />
               <span>{error}</span>
@@ -153,7 +153,7 @@ export function JobsTable() {
     if (!filteredJobs.length) {
       return (
         <tr>
-          <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-500">
+          <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-500">
             {statusFilter === 'all'
               ? 'No jobs yet. Create your first job to kick off the Phase 1 MVP flow.'
               : `No jobs with status "${statusLabel(statusFilter)}".`}
@@ -169,8 +169,6 @@ export function JobsTable() {
       const timeline     = `${formatDate(job.scheduledDate)} - ${formatDate(job.estimatedCompletion)}`
       const photosCount  = job.photosCount ?? job.photos?.length ?? 0
       const lastUpdate   = job.lastUpdateNote ?? 'No updates yet'
-      const assignee     = job.technicianName ?? job.technicianId ?? 'Unassigned'
-
       return (
         <tr
           key={job.id}
@@ -191,12 +189,6 @@ export function JobsTable() {
           </td>
           <td className="px-6 py-4 whitespace-nowrap min-w-[160px]" onClick={(e) => e.stopPropagation()}>
             {renderStatusCell(job)}
-          </td>
-          <td className="px-6 py-4 whitespace-nowrap">
-            <div className="flex items-center text-sm text-gray-900">
-              <User className="h-4 w-4 mr-2 text-gray-400" />
-              {assignee}
-            </div>
           </td>
           <td className="px-6 py-4 whitespace-nowrap">
             <div className="flex items-center text-sm">
@@ -237,7 +229,7 @@ export function JobsTable() {
             <h3 className="text-lg font-medium text-gray-900">All Jobs</h3>
             <div className="flex items-center space-x-2">
               <select
-                className="rounded-md border-gray-300 text-sm"
+                className="rounded-md border-gray-300 text-xs px-2 py-1"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -245,13 +237,6 @@ export function JobsTable() {
                 {STATUS_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
-              </select>
-              <select className="rounded-md border-gray-300 text-sm">
-                <option>All Assignees</option>
-                <option>Mike Johnson</option>
-                <option>Sarah Chen</option>
-                <option>Dave Rodriguez</option>
-                <option>Alex Kim</option>
               </select>
               <input
                 type="search"
@@ -269,7 +254,6 @@ export function JobsTable() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer & Location</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photos</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
                 <th className="relative px-6 py-3"><span className="sr-only">Actions</span></th>

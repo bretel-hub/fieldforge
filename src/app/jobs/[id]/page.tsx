@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { PhotoCaptureComponent } from '@/components/PhotoCapture'
 import {
-  Camera, MapPin, Clock, User, Loader2, ArrowLeft,
+  Camera, MapPin, User, Loader2, ArrowLeft,
   DollarSign, CheckCircle2, AlertCircle, FileText, Save,
   Mail, Phone, Building2, CalendarDays, ChevronDown, ChevronUp,
   StickyNote, Plus,
@@ -195,10 +195,6 @@ export default function JobDetailPage() {
   }
 
   const statusColor = STATUS_COLORS[status] ?? STATUS_COLORS['not-started']
-  const address = job.location?.label
-    ? `${job.location.label}${job.location.address ? ` · ${job.location.address}` : ''}`
-    : job.location?.address ?? '—'
-
   const noteEntries = job.noteEntries ?? []
   const hasItems = job.lineItems && job.lineItems.length > 0
 
@@ -315,20 +311,6 @@ export default function JobDetailPage() {
           {/* Meta grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm pt-4 border-t border-gray-100">
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Job Location</p>
-                  <p className="text-gray-900">{address}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <DollarSign className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Contract Value</p>
-                  <p className="font-semibold text-green-700">{formatCurrency(job.value)}</p>
-                </div>
-              </div>
               {job.projectTimeline && (
                 <div className="flex items-start gap-3">
                   <CalendarDays className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
@@ -338,15 +320,6 @@ export default function JobDetailPage() {
                   </div>
                 </div>
               )}
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <Clock className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Scheduled</p>
-                  <p className="text-gray-900">{formatDate(job.scheduledDate)}</p>
-                </div>
-              </div>
               {job.estimatedCompletion && (
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
@@ -356,6 +329,8 @@ export default function JobDetailPage() {
                   </div>
                 </div>
               )}
+            </div>
+            <div className="space-y-4">
               {job.technicianName && (
                 <div className="flex items-start gap-3">
                   <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
