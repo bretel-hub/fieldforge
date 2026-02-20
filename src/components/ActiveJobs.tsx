@@ -1,6 +1,6 @@
 'use client'
 
-import { Camera, MapPin, Calendar, User } from 'lucide-react'
+import { Camera, MapPin, User } from 'lucide-react'
 
 const jobs = [
   {
@@ -58,71 +58,62 @@ const statusStyles = {
 
 export function ActiveJobs() {
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Active Jobs</h3>
-          <span className="text-sm text-gray-500">12 total</span>
-        </div>
-        
-        <div className="space-y-4">
-          {jobs.map((job) => (
-            <div key={job.id} className="border-l-4 border-green-400 pl-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-gray-900">
-                      {job.customer}
-                    </p>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[job.status as keyof typeof statusStyles]}`}>
-                      {job.status.replace('-', ' ')}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{job.title}</p>
-                  
-                  {/* Progress bar */}
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-500">Progress</span>
-                      <span className="text-gray-900">{job.progress}%</span>
-                    </div>
-                    <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full transition-all"
-                        style={{ width: `${job.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center mt-2 space-x-4 text-xs text-gray-500">
-                    <div className="flex items-center">
-                      <User className="h-3 w-3 mr-1" />
-                      {job.assignee}
-                    </div>
-                    <div className="flex items-center">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {job.location}
-                    </div>
-                    <div className="flex items-center">
-                      <Camera className="h-3 w-3 mr-1" />
-                      {job.photosCount} photos
-                    </div>
-                  </div>
-                  
-                  <p className="mt-1 text-xs text-gray-400">
-                    Last update: {job.lastUpdate}
-                  </p>
-                </div>
+    <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 p-6 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-[Space Grotesk] text-[var(--text-primary)]">Active Jobs</h3>
+        <span className="text-sm text-[var(--text-secondary)]">12 total</span>
+      </div>
+
+      <div className="mt-4 space-y-4">
+        {jobs.map((job) => (
+          <div key={job.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)]/70 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{job.customer}</p>
+                <p className="text-sm text-[var(--text-secondary)]">{job.title}</p>
+              </div>
+              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[job.status as keyof typeof statusStyles]}`}>
+                {job.status.replace('-', ' ')}
+              </span>
+            </div>
+
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
+                <span>Progress</span>
+                <span className="text-[var(--text-primary)]">{job.progress}%</span>
+              </div>
+              <div className="mt-1 h-2 w-full rounded-full bg-white">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent)] to-indigo-400"
+                  style={{ width: `${job.progress}%` }}
+                />
               </div>
             </div>
-          ))}
-        </div>
-        
-        <div className="mt-4">
-          <button className="text-sm text-blue-600 hover:text-blue-500 font-medium">
-            View all jobs →
-          </button>
-        </div>
+
+            <div className="mt-3 flex flex-wrap gap-4 text-xs text-[var(--text-secondary)]">
+              <span className="inline-flex items-center gap-1">
+                <User className="h-3 w-3" />
+                {job.assignee}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {job.location}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Camera className="h-3 w-3" />
+                {job.photosCount} photos
+              </span>
+            </div>
+
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">Last update: {job.lastUpdate}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5">
+        <button className="text-sm font-semibold text-[var(--accent)] hover:text-blue-700">
+          View all jobs →
+        </button>
       </div>
     </div>
   )

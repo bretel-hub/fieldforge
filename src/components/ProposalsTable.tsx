@@ -46,9 +46,9 @@ interface FullProposal {
 
 const statusStyles = {
   draft: 'bg-gray-100 text-gray-800',
-  pending: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-green-100 text-green-800',
-  declined: 'bg-red-100 text-red-800',
+  pending: 'bg-amber-100 text-amber-800',
+  approved: 'bg-emerald-100 text-emerald-800',
+  declined: 'bg-rose-100 text-rose-800',
 }
 
 const formatCurrency = (amount: number) => {
@@ -59,14 +59,13 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-
 export function ProposalsTable() {
   const router = useRouter()
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [search, setSearch] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
   const [previewProposal, setPreviewProposal] = useState<FullProposal | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Proposal | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -134,7 +133,6 @@ export function ProposalsTable() {
         if (newStatus === 'approved') {
           const jobId = `JOB-${proposal.id}`
 
-          // Fetch full proposal to get description, location, timeline
           let projectDescription = ''
           let projectLocation = proposal.customer_address
           let projectTimeline = ''
@@ -150,7 +148,7 @@ export function ProposalsTable() {
               projectTimeline = fullData.proposal.project_timeline || ''
             }
           } catch {
-            // non-fatal — proceed with basic data
+            // non-fatal
           }
 
           await offlineStorage.saveJob({
@@ -212,31 +210,33 @@ export function ProposalsTable() {
       `Proposal ${proposal.proposal_number}: ${proposal.project_title}`
     )
     const body = encodeURIComponent(
-      `Please find attached the proposal ${proposal.proposal_number} for ${proposal.project_title}.\n\nTotal: ${formatCurrency(proposal.total)}\n\nPlease let us know if you have any questions.`
+      `Please find attached the proposal ${proposal.proposal_number} for ${proposal.project_title}.\n\nTotal: ${formatCurrency(
+        proposal.total
+      )}\n\nPlease let us know if you have any questions.`
     )
     window.open(`mailto:${proposal.customer_email || ''}?subject=${subject}&body=${body}`)
   }
 
   if (loading) {
     return (
-      <div className="bg-white shadow rounded-lg p-12 text-center">
-        <div className="text-gray-500">Loading proposals...</div>
+      <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 p-12 text-center text-[var(--text-secondary)]">
+        Loading proposals...
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-white shadow rounded-lg p-12 text-center">
-        <div className="text-red-600">{error}</div>
+      <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 p-12 text-center text-rose-600">
+        {error}
       </div>
     )
   }
 
   if (proposals.length === 0) {
     return (
-      <div className="bg-white shadow rounded-lg p-12 text-center">
-        <div className="text-gray-500">No proposals yet. Create your first one!</div>
+      <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 p-12 text-center text-[var(--text-secondary)]">
+        No proposals yet. Create your first one!
       </div>
     )
   }
@@ -244,18 +244,20 @@ export function ProposalsTable() {
   return (
     <>
       {showConfetti && (
-        <ConfettiCelebration onComplete={() => {
-          setShowConfetti(false)
-          router.push('/jobs')
-        }} />
+        <ConfettiCelebration
+          onComplete={() => {
+            setShowConfetti(false)
+            router.push('/jobs')
+          }}
+        />
       )}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">All Proposals</h3>
-            <div className="flex items-center space-x-2">
+      <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/95 shadow-[var(--shadow-soft)] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[var(--border)]">
+          <div className="flex flex-wrap items-center gap-3">
+            <h3 className="text-lg font-[Space Grotesk] text-[var(--text-primary)]">All Proposals</h3>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
               <select
-                className="rounded-md border-gray-300 text-sm"
+                className="h-10 rounded-full border border-[var(--border)] bg-white px-3 text-sm text-[var(--text-secondary)]"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -268,7 +270,7 @@ export function ProposalsTable() {
               <input
                 type="search"
                 placeholder="Search proposals..."
-                className="rounded-md border-gray-300 text-sm"
+                className="h-10 rounded-full border border-[var(--border)] bg-[var(--surface-alt)] px-4 text-sm text-[var(--text-secondary)]"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -277,30 +279,30 @@ export function ProposalsTable() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[var(--border)]">
+            <thead className="bg-[var(--surface-alt)]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.35em] text-[var(--text-secondary)]">
                   Proposal
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.35em] text-[var(--text-secondary)]">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.35em] text-[var(--text-secondary)]">
                   Value
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-[0.35em] text-[var(--text-secondary)]">
                   Status
                 </th>
-                <th className="relative px-6 py-3">
+                <th className="relative px-6 py-3 text-right text-xs font-medium uppercase tracking-[0.35em] text-[var(--text-secondary)]">
                   <span className="sr-only">Actions</span>
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-[var(--border)] bg-white">
               {filteredProposals.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={5} className="px-6 py-12 text-center text-sm text-[var(--text-secondary)]">
                     No proposals match your filters.
                   </td>
                 </tr>
@@ -308,25 +310,23 @@ export function ProposalsTable() {
               {filteredProposals.map((proposal) => (
                 <tr
                   key={proposal.id}
-                  className="hover:bg-gray-50 cursor-pointer"
+                  className="hover:bg-[var(--surface-alt)] cursor-pointer"
                   onClick={() => router.push(`/proposals/${proposal.id}/edit`)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-semibold text-[var(--text-primary)]">
                       {proposal.proposal_number}
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-[var(--text-secondary)]">
                       {proposal.project_title}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {proposal.customer_name || proposal.customer_contact}
-                    </div>
-                    <div className="text-sm text-gray-500">{proposal.customer_address}</div>
+                    <div className="text-sm font-medium text-[var(--text-primary)]">{proposal.customer_name || proposal.customer_contact}</div>
+                    <div className="text-sm text-[var(--text-secondary)]">{proposal.customer_address}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-semibold text-[var(--text-primary)]">
                       {formatCurrency(proposal.total)}
                     </div>
                   </td>
@@ -335,7 +335,9 @@ export function ProposalsTable() {
                       value={proposal.status}
                       onChange={(e) => handleStatusChange(proposal, e.target.value)}
                       disabled={updatingStatus === proposal.id}
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${statusStyles[proposal.status as keyof typeof statusStyles] ?? 'bg-gray-100 text-gray-800'}`}
+                      className={`h-9 rounded-full border-0 px-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-60 ${
+                        statusStyles[proposal.status as keyof typeof statusStyles]
+                      }`}
                     >
                       <option value="draft">Draft</option>
                       <option value="pending">Pending</option>
@@ -347,35 +349,31 @@ export function ProposalsTable() {
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/proposals/${proposal.id}/edit`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                        className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-white px-3 py-1 text-xs font-semibold text-[var(--accent)]"
                         title="Edit proposal"
                       >
-                        <Edit className="h-3.5 w-3.5" />
-                        Edit
+                        <Edit className="h-3.5 w-3.5" /> Edit
                       </Link>
                       <button
                         onClick={() => handleDownloadPDF(proposal.id)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                        className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-alt)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)]"
                         title="Download PDF"
                       >
-                        <Download className="h-3.5 w-3.5" />
-                        Download PDF
+                        <Download className="h-3.5 w-3.5" /> PDF
                       </button>
                       <button
                         onClick={() => handleEmail(proposal)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors"
+                        className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
                         title="Email proposal"
                       >
-                        <Mail className="h-3.5 w-3.5" />
-                        Email
+                        <Mail className="h-3.5 w-3.5" /> Email
                       </button>
                       <button
                         onClick={() => setDeleteTarget(proposal)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                        className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-600"
                         title="Delete proposal"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Delete
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
                       </button>
                     </div>
                   </td>
@@ -385,48 +383,46 @@ export function ProposalsTable() {
           </table>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              Showing {filteredProposals.length} of {proposals.length} {proposals.length === 1 ? 'proposal' : 'proposals'}
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="px-3 py-1 text-sm border rounded-md disabled:opacity-50" disabled>
-                Previous
-              </button>
-              <button className="px-3 py-1 text-sm border rounded-md">
-                Next
-              </button>
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface-alt)]/70 px-6 py-4 text-sm text-[var(--text-secondary)]">
+          <div>
+            Showing {filteredProposals.length} of {proposals.length}{' '}
+            {proposals.length === 1 ? 'proposal' : 'proposals'}
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="h-9 rounded-full border border-[var(--border)] px-3 text-sm text-[var(--text-secondary)]" disabled>
+              Previous
+            </button>
+            <button className="h-9 rounded-full border border-[var(--border)] px-3 text-sm text-[var(--text-secondary)]">
+              Next
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setDeleteTarget(null)} />
-          <div className="relative z-10 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setDeleteTarget(null)} />
+          <div className="relative z-10 w-full max-w-sm rounded-[var(--radius-xl)] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-                <Trash2 className="h-5 w-5 text-red-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50">
+                <Trash2 className="h-5 w-5 text-rose-500" />
               </div>
-              <h2 className="text-base font-semibold text-gray-900">Delete Proposal</h2>
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">Delete Proposal</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-sm text-[var(--text-secondary)] mb-6">
               Are you sure want to delete this proposal?
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-full border border-rose-500 bg-rose-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
               >
                 {deleting ? 'Deleting...' : 'Yes, Delete'}
               </button>
@@ -435,7 +431,6 @@ export function ProposalsTable() {
         </div>
       )}
 
-      {/* PDF Preview Modal */}
       {previewProposal && (
         <ProposalPreview
           proposalNumber={previewProposal.proposal_number}

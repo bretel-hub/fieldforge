@@ -14,7 +14,7 @@ const stats = [
     name: 'Active Proposals',
     value: '23',
     change: '+3 this week',
-    changeType: 'positive', 
+    changeType: 'positive',
     icon: FileText,
   },
   {
@@ -33,40 +33,32 @@ const stats = [
   },
 ]
 
+const changeTone = {
+  positive: 'text-emerald-600 bg-emerald-50',
+  neutral: 'text-gray-500 bg-gray-100',
+  negative: 'text-rose-600 bg-rose-50'
+}
+
 export function StatsGrid() {
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
       {stats.map((stat) => (
         <div
           key={stat.name}
-          className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"
+          className="rounded-[24px] border border-[var(--border)] bg-white/90 p-5 shadow-[var(--shadow-soft)]"
         >
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <stat.icon className="h-8 w-8 text-gray-400" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">{stat.name}</p>
+              <p className="mt-3 text-3xl font-[Space Grotesk] text-[var(--text-primary)]">{stat.value}</p>
             </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">
-                  {stat.name}
-                </dt>
-                <dd className="flex items-baseline">
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {stat.value}
-                  </div>
-                  <div className={`ml-2 flex items-baseline text-sm font-semibold ${
-                    stat.changeType === 'positive' 
-                      ? 'text-green-600' 
-                      : stat.changeType === 'negative'
-                      ? 'text-red-600'
-                      : 'text-gray-500'
-                  }`}>
-                    {stat.change}
-                  </div>
-                </dd>
-              </dl>
-            </div>
+            <span className="rounded-2xl bg-[var(--surface-alt)] p-3 text-[var(--accent)]">
+              <stat.icon className="h-6 w-6" />
+            </span>
           </div>
+          <p className={`mt-4 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${changeTone[stat.changeType as keyof typeof changeTone]}`}>
+            {stat.change}
+          </p>
         </div>
       ))}
     </div>

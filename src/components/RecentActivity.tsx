@@ -10,7 +10,7 @@ const activities = [
     value: '$12,400',
     time: '2 hours ago',
     icon: FileText,
-    iconColor: 'text-green-600 bg-green-100',
+    accent: 'text-emerald-500 bg-emerald-50',
   },
   {
     id: 2,
@@ -18,7 +18,7 @@ const activities = [
     message: 'Mike Johnson uploaded 8 photos to Riverside Restaurant project',
     time: '3 hours ago',
     icon: Camera,
-    iconColor: 'text-blue-600 bg-blue-100',
+    accent: 'text-sky-500 bg-sky-50',
   },
   {
     id: 3,
@@ -26,7 +26,7 @@ const activities = [
     message: 'Downtown Office Complex viewed HVAC Installation proposal',
     time: '1 day ago',
     icon: FileText,
-    iconColor: 'text-yellow-600 bg-yellow-100',
+    accent: 'text-amber-500 bg-amber-50',
   },
   {
     id: 4,
@@ -35,7 +35,7 @@ const activities = [
     value: '$5,200',
     time: '1 day ago',
     icon: DollarSign,
-    iconColor: 'text-green-600 bg-green-100',
+    accent: 'text-emerald-500 bg-emerald-50',
   },
   {
     id: 5,
@@ -43,7 +43,7 @@ const activities = [
     message: 'Sarah Chen marked Office Park Building security installation as completed',
     time: '2 days ago',
     icon: CheckCircle,
-    iconColor: 'text-green-600 bg-green-100',
+    accent: 'text-emerald-500 bg-emerald-50',
   },
   {
     id: 6,
@@ -52,7 +52,7 @@ const activities = [
     value: '$45,300',
     time: '3 days ago',
     icon: FileText,
-    iconColor: 'text-blue-600 bg-blue-100',
+    accent: 'text-sky-500 bg-sky-50',
   },
   {
     id: 7,
@@ -60,7 +60,7 @@ const activities = [
     message: 'Dave Rodriguez started HVAC maintenance at Greenfield Apartments',
     time: '4 days ago',
     icon: Clock,
-    iconColor: 'text-yellow-600 bg-yellow-100',
+    accent: 'text-amber-500 bg-amber-50',
   },
   {
     id: 8,
@@ -68,60 +68,39 @@ const activities = [
     message: 'New customer added: TechStart Coworking Space',
     time: '5 days ago',
     icon: User,
-    iconColor: 'text-purple-600 bg-purple-100',
+    accent: 'text-violet-500 bg-violet-50',
   },
 ]
 
 export function RecentActivity() {
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
-        
-        <div className="flow-root">
-          <ul role="list" className="-mb-8">
-            {activities.map((activity, activityIdx) => (
-              <li key={activity.id}>
-                <div className="relative pb-8">
-                  {activityIdx !== activities.length - 1 ? (
-                    <span
-                      className="absolute left-5 top-5 -ml-px h-full w-0.5 bg-gray-200"
-                      aria-hidden="true"
-                    />
-                  ) : null}
-                  <div className="relative flex items-start space-x-3">
-                    <div className={`relative px-1 ${activity.iconColor} rounded-full flex h-10 w-10 items-center justify-center`}>
-                      <activity.icon className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-900">
-                            {activity.message}
-                            {activity.value && (
-                              <span className="ml-2 font-medium text-green-600">
-                                {activity.value}
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {activity.time}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        
-        <div className="mt-6">
-          <button className="text-sm text-blue-600 hover:text-blue-500 font-medium">
-            View all activity →
-          </button>
-        </div>
+    <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 p-6 shadow-[var(--shadow-soft)]">
+      <h3 className="text-lg font-[Space Grotesk] text-[var(--text-primary)] mb-4">Recent Activity</h3>
+      <div className="space-y-6">
+        {activities.map((activity, idx) => (
+          <div key={activity.id} className="relative pl-12">
+            {idx !== activities.length - 1 && (
+              <span className="absolute left-[22px] top-12 h-full w-px bg-[var(--border)]" />
+            )}
+            <span className={`absolute left-0 top-2 flex h-10 w-10 items-center justify-center rounded-full ${activity.accent}`}>
+              <activity.icon className="h-4.5 w-4.5" />
+            </span>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)]/70 px-4 py-3">
+              <p className="text-sm text-[var(--text-primary)]">
+                {activity.message}
+                {activity.value && (
+                  <span className="ml-2 font-semibold text-emerald-600">{activity.value}</span>
+                )}
+              </p>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">{activity.time}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-6">
+        <button className="text-sm font-semibold text-[var(--accent)] hover:text-blue-700">
+          View all activity →
+        </button>
       </div>
     </div>
   )

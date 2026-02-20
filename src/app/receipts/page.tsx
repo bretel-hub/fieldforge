@@ -160,35 +160,36 @@ export default function ReceiptsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Receipts</h1>
-          <p className="text-sm text-gray-600">
-            Scan paper receipts or forward emailed receipts so every expense lands on the right job.
-          </p>
-          <div className="mt-2 text-xs text-gray-500">
-            Email receipts to <Link href="mailto:receipts@fieldforge.app" className="text-blue-600">receipts@fieldforge.app</Link>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+    <div className="space-y-8">
+      <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 px-6 py-5 shadow-[var(--shadow-soft)]">
+        <h1 className="text-3xl font-[Space Grotesk] text-[var(--text-primary)]">Receipts</h1>
+        <p className="text-sm text-[var(--text-secondary)]">
+          Scan paper receipts or forward emailed receipts so every expense lands on the right job.
+        </p>
+        <p className="text-xs text-[var(--text-secondary)] mt-2">
+          Email receipts to{' '}
+          <Link href="mailto:receipts@fieldforge.app" className="text-[var(--accent)]">
+            receipts@fieldforge.app
+          </Link>
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
           <button
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--text-secondary)]"
             onClick={() => setShowCapture(true)}
           >
             <Camera className="h-4 w-4" /> Scan receipt
           </button>
           <Link
             href="mailto:receipts@fieldforge.app"
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-alt)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)]"
           >
             <Mail className="h-4 w-4" /> Email inbox
           </Link>
         </div>
       </div>
 
-      <div className="bg-white shadow rounded-lg">
-        <div className="border-b border-gray-200 px-6 py-4">
+      <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/95 shadow-[var(--shadow-soft)]">
+        <div className="border-b border-[var(--border)] px-6 py-4">
           <div className="flex flex-wrap items-center gap-2">
             {statusTabs.map((tab) => (
               <button
@@ -197,8 +198,8 @@ export default function ReceiptsPage() {
                   setFilter(tab.id)
                   fetchReceipts(tab.id)
                 }}
-                className={`rounded-full px-3 py-1 text-sm font-medium ${
-                  filter === tab.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
+                className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                  filter === tab.id ? 'bg-[var(--accent)] text-white' : 'bg-[var(--surface-alt)] text-[var(--text-secondary)]'
                 }`}
               >
                 {tab.label}
@@ -207,43 +208,41 @@ export default function ReceiptsPage() {
           </div>
         </div>
 
-        {error && (
-          <div className="px-6 py-4 text-sm text-red-600">{error}</div>
-        )}
+        {error && <div className="px-6 py-4 text-sm text-rose-600">{error}</div>}
 
         {loading ? (
-          <div className="flex items-center justify-center px-6 py-12 text-gray-500">
+          <div className="flex items-center justify-center px-6 py-12 text-[var(--text-secondary)]">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading receipts…
           </div>
         ) : filteredReceipts.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-gray-500">
+          <div className="px-6 py-12 text-center text-sm text-[var(--text-secondary)]">
             Nothing here yet. Scan a receipt or forward an email.
           </div>
         ) : (
-          <ul className="divide-y divide-gray-200">
+          <ul className="divide-y divide-[var(--border)]">
             {filteredReceipts.map((receipt) => {
               const source = sourceMeta[receipt.source] || sourceMeta.scan
               return (
                 <li
                   key={receipt.id}
-                  className="flex flex-col gap-2 px-6 py-4 hover:bg-gray-50 cursor-pointer md:flex-row md:items-center md:justify-between"
+                  className="flex flex-col gap-2 px-6 py-4 hover:bg-[var(--surface-alt)] cursor-pointer md:flex-row md:items-center md:justify-between"
                   onClick={() => setSelected(receipt)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                       <source.icon className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{receipt.vendor_name}</p>
-                      <p className="text-xs text-gray-500">Captured via {source.label}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">{receipt.vendor_name}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">Captured via {source.label}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">
                         {receipt.job_reference ? `Job: ${receipt.job_reference}` : 'Unassigned'}
                       </p>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-700 md:text-right">
+                  <div className="text-sm text-[var(--text-primary)] md:text-right">
                     <p className="font-semibold">{currencyFormat(receipt.total, receipt.currency ?? 'USD')}</p>
-                    <p className="text-xs text-gray-500 capitalize">{receipt.status}</p>
+                    <p className="text-xs text-[var(--text-secondary)] capitalize">{receipt.status}</p>
                   </div>
                 </li>
               )
@@ -255,49 +254,51 @@ export default function ReceiptsPage() {
       {selected && (
         <div className="fixed inset-0 z-40 flex items-start justify-end bg-black/30" onClick={() => setSelected(null)}>
           <div
-            className="h-full w-full max-w-md overflow-y-auto bg-white shadow-xl"
+            className="h-full w-full max-w-md overflow-y-auto border-l border-[var(--border)] bg-white shadow-[var(--shadow-soft)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
               <div>
-                <p className="text-xs uppercase tracking-wider text-gray-500">Receipt</p>
-                <h2 className="text-lg font-semibold text-gray-900">{selected.vendor_name}</h2>
+                <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Receipt</p>
+                <h2 className="text-lg font-[Space Grotesk] text-[var(--text-primary)]">{selected.vendor_name}</h2>
               </div>
-              <button className="rounded-full border border-gray-200 p-2 text-gray-500" onClick={() => setSelected(null)}>
+              <button className="rounded-full border border-[var(--border)] p-2 text-[var(--text-secondary)]" onClick={() => setSelected(null)}>
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="px-6 py-4 space-y-4 text-sm">
+            <div className="space-y-4 px-6 py-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-500">Total</span>
-                <span className="font-semibold">{currencyFormat(selected.total, selected.currency ?? 'USD')}</span>
+                <span className="text-[var(--text-secondary)]">Total</span>
+                <span className="font-semibold text-[var(--text-primary)]">
+                  {currencyFormat(selected.total, selected.currency ?? 'USD')}
+                </span>
               </div>
               {selected.category && (
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Category</span>
+                  <span className="text-[var(--text-secondary)]">Category</span>
                   <span>{selected.category}</span>
                 </div>
               )}
               <div>
-                <label className="text-xs uppercase tracking-wider text-gray-500">Job reference</label>
+                <label className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Job reference</label>
                 <input
                   type="text"
                   value={selected.job_reference || ''}
                   onChange={(e) => setSelected({ ...selected, job_reference: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
                   placeholder="e.g. Job 204"
                 />
               </div>
               {selected.notes && (
                 <div>
-                  <label className="text-xs uppercase tracking-wider text-gray-500">Notes</label>
-                  <p className="mt-1 text-gray-700">{selected.notes}</p>
+                  <label className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Notes</label>
+                  <p className="mt-1 text-[var(--text-primary)]">{selected.notes}</p>
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
                 <button
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-emerald-500 bg-emerald-500 px-4 py-2 text-sm font-semibold text-white"
                   onClick={() =>
                     handleAssign(selected, 'assigned', {
                       jobReference: selected.job_reference || null
@@ -307,13 +308,13 @@ export default function ReceiptsPage() {
                   <ClipboardCheck className="h-4 w-4" /> Assign to job
                 </button>
                 <button
-                  className="inline-flex items-center justify-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700"
+                  className="inline-flex items-center justify-center rounded-full border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)]"
                   onClick={() => handleAssign(selected, 'archived')}
                 >
                   Archive
                 </button>
                 <button
-                  className="inline-flex items-center justify-center rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-600"
+                  className="inline-flex items-center justify-center rounded-full border border-rose-400 px-4 py-2 text-sm font-semibold text-rose-600"
                   onClick={() => handleDelete(selected)}
                 >
                   Delete
@@ -328,28 +329,28 @@ export default function ReceiptsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCapture(false)}>
           <form
             onSubmit={handleCreateReceipt}
-            className="w-full max-w-lg space-y-4 rounded-lg bg-white p-6 shadow-2xl"
+            className="w-full max-w-lg space-y-4 rounded-[var(--radius-xl)] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Scan receipt</h2>
-              <button type="button" className="rounded-full border border-gray-200 p-2 text-gray-500" onClick={() => setShowCapture(false)}>
+              <h2 className="text-lg font-[Space Grotesk] text-[var(--text-primary)]">Scan receipt</h2>
+              <button type="button" className="rounded-full border border-[var(--border)] p-2 text-[var(--text-secondary)]" onClick={() => setShowCapture(false)}>
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-[var(--text-primary)]">
                 Vendor
                 <input
                   type="text"
                   required
                   value={form.vendorName}
                   onChange={(e) => setForm((prev) => ({ ...prev, vendorName: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
                 />
               </label>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-[var(--text-primary)]">
                 Total amount
                 <input
                   type="number"
@@ -357,43 +358,43 @@ export default function ReceiptsPage() {
                   required
                   value={form.total}
                   onChange={(e) => setForm((prev) => ({ ...prev, total: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
                 />
               </label>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-[var(--text-primary)]">
                 Category
                 <input
                   type="text"
                   value={form.category}
                   onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
                   placeholder="Materials, fuel, permits…"
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
                 />
               </label>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-[var(--text-primary)]">
                 Job reference
                 <input
                   type="text"
                   value={form.jobReference}
                   onChange={(e) => setForm((prev) => ({ ...prev, jobReference: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
                 />
               </label>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-[var(--text-primary)]">
                 Payment method
                 <input
                   type="text"
                   value={form.paymentMethod}
                   onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
                 />
               </label>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-[var(--text-primary)]">
                 Source
                 <select
                   value={form.source}
                   onChange={(e) => setForm((prev) => ({ ...prev, source: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2"
+                  className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2"
                 >
                   <option value="scan">Scan</option>
                   <option value="email">Email</option>
@@ -402,24 +403,24 @@ export default function ReceiptsPage() {
               </label>
             </div>
 
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium text-[var(--text-primary)]">
               Notes
               <textarea
                 value={form.notes}
                 onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+                className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
                 rows={3}
               />
             </label>
 
-            <div className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-3 py-4 text-sm text-gray-500">
+            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-alt)]/70 px-4 py-6 text-center text-sm text-[var(--text-secondary)]">
               Image + OCR pipeline coming next. For now, attach via email or add context in notes.
             </div>
 
             <div className="flex justify-end gap-3">
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700"
+                className="inline-flex items-center justify-center rounded-full border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)]"
                 onClick={() => setShowCapture(false)}
               >
                 Cancel
@@ -427,7 +428,7 @@ export default function ReceiptsPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--accent)] bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                 Save receipt

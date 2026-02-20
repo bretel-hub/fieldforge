@@ -8,20 +8,18 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Your sales and field operations overview
-          </p>
+        <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 px-6 py-5 shadow-[var(--shadow-soft)]">
+          <h1 className="text-3xl font-[Space Grotesk] text-[var(--text-primary)]">Dashboard</h1>
+          <p className="text-sm text-[var(--text-secondary)]">Your sales and field operations overview</p>
         </div>
-        
+
         <StatsGrid />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <ActiveProposals />
           <ActiveJobs />
         </div>
-        
+
         <RecentActivity />
       </div>
     </DashboardLayout>

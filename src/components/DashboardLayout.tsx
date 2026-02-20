@@ -10,7 +10,7 @@ import {
   Menu,
   X,
   Handshake,
-  Receipt,
+  Receipt
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -35,109 +35,93 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
 
+  const NavContent = (
+    <div className="flex h-full flex-col gap-8">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[var(--shadow-soft)]">
+          <span className="font-[Space Grotesk] text-base tracking-[0.25em] text-[var(--accent)]">FF</span>
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">FieldForge</p>
+          <p className="text-lg font-[Space Grotesk] text-[var(--text-primary)]">Operations</p>
+        </div>
+      </div>
+      <nav className="space-y-2">
+        {navigation.map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={cn(
+              'flex items-center justify-between rounded-2xl border px-4 py-3 text-sm font-medium transition-all',
+              pathname === item.href
+                ? 'border-[var(--accent)]/30 bg-white shadow-[var(--shadow-soft)] text-[var(--accent)]'
+                : 'border-transparent bg-white/80 text-[var(--text-secondary)] hover:border-[var(--border)] hover:text-[var(--text-primary)]'
+            )}
+          >
+            <span className="flex items-center gap-3">
+              <span className={cn('rounded-xl bg-[var(--surface-alt)] p-2', pathname === item.href ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]')}>
+                <item.icon className="h-4 w-4" />
+              </span>
+              {item.name}
+            </span>
+            {pathname === item.href && <span className="text-xs font-semibold">●</span>}
+          </Link>
+        ))}
+      </nav>
+      <div className="mt-auto rounded-2xl border border-[var(--border)] bg-white/90 p-4 shadow-[var(--shadow-soft)]">
+        <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">Status</p>
+        <p className="mt-2 text-lg font-[Space Grotesk] text-[var(--text-primary)]">Systems nominal</p>
+        <p className="text-xs text-[var(--text-secondary)]">Latency 39ms · API OK</p>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--page-gradient)] text-[var(--text-primary)]">
       {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
-            <div className="flex items-center justify-between px-4 py-6">
-              <div className="flex items-center">
-                <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">FF</span>
-                </div>
-                <span className="ml-2 text-xl font-bold">FieldForge</span>
-              </div>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="h-6 w-6 text-gray-400"
-              >
-                <X />
-              </button>
-            </div>
-            <nav className="flex-1 px-4 pb-4">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'group flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1',
-                    pathname === item.href
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  )}
-                >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
+          <div className="absolute inset-0 bg-black/20" onClick={() => setSidebarOpen(false)} />
+          <div className="relative ml-auto flex h-full w-72 flex-col bg-[var(--surface)] px-6 py-8 shadow-2xl">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="ml-auto rounded-full border border-[var(--border)] p-2 text-[var(--text-secondary)]"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            {NavContent}
           </div>
         </div>
       )}
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 py-6 shadow-sm">
-          <div className="flex items-center">
-            <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">FF</span>
-            </div>
-            <span className="ml-2 text-xl font-bold">FieldForge</span>
-          </div>
-          <nav className="flex flex-1 flex-col">
-            <ul role="list" className="flex flex-1 flex-col gap-y-7">
-              <li>
-                <ul role="list" className="-mx-2 space-y-1">
-                  {navigation.map((item) => (
-                    <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
-                          pathname === item.href
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50'
-                        )}
-                      >
-                        <item.icon className="h-6 w-6 shrink-0" />
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            </ul>
-          </nav>
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col lg:px-8 lg:py-8">
+        <div className="h-full rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 px-6 py-8 shadow-[var(--shadow-soft)]">
+          {NavContent}
         </div>
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
-        {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+      <div className="lg:pl-72">
+        <div className="sticky top-0 z-40 flex h-20 items-center border-b border-[var(--border)] bg-white/80 px-4 backdrop-blur-sm md:px-10">
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+            className="-m-2.5 mr-4 rounded-full border border-[var(--border)] p-2 text-[var(--text-secondary)] lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <span className="sr-only">Open sidebar</span>
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5" />
           </button>
-
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="flex flex-1" />
-            <div className="flex items-center gap-x-4 lg:gap-x-6">
-              {/* User menu placeholder */}
-              <div className="h-8 w-8 rounded-full bg-gray-300" />
-            </div>
+          <div className="ml-auto flex items-center gap-3">
+            <button className="rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)]">
+              Support
+            </button>
+            <div className="h-11 w-11 rounded-full border border-[var(--border)] bg-[var(--surface-alt)]" />
           </div>
         </div>
 
-        {/* Page content */}
-        <main className="py-8">
-          <div className="px-4 sm:px-6 lg:px-8">
+        <main className="px-4 py-10 md:px-10">
+          <div className="mx-auto max-w-6xl space-y-10">
             {children}
           </div>
         </main>
