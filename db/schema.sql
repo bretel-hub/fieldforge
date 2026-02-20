@@ -120,3 +120,35 @@ CREATE TRIGGER update_partners_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 CREATE INDEX IF NOT EXISTS idx_partner_costs_partner_id ON partner_costs(partner_id);
+
+-- Receipts table
+CREATE TABLE IF NOT EXISTS receipts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  job_reference TEXT,
+  job_id UUID,
+  proposal_id UUID REFERENCES proposals(id) ON DELETE SET NULL,
+  vendor_name TEXT NOT NULL,
+  category TEXT,
+  subtotal DECIMAL(10,2),
+  tax DECIMAL(10,2),
+  total DECIMAL(10,2) NOT NULL,
+  currency VARCHAR(10) DEFAULT 'USD',
+  payment_method VARCHAR(100),
+  source VARCHAR(50) DEFAULT 'scan', -- scan, email, upload
+  status VARCHAR(50) DEFAULT 'inbox', -- inbox, assigned, archived
+  media_url TEXT,
+  email_id TEXT,
+  metadata JSONB,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_receipts_status ON receipts(status);
+CREATE INDEX IF NOT EXISTS idx_receipts_created_at ON receipts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_receipts_vendor ON receipts(vendor_name);
+
+CREATE TRIGGER update_receipts_updated_at
+  BEFORE UPDATE ON receipts
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();

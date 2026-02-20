@@ -8,7 +8,8 @@ import {
   Users,
   Settings,
   Menu,
-  X
+  X,
+  Receipt
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Dashboard', desc: 'Command center', href: '/', icon: LayoutDashboard },
   { name: 'Proposals', desc: 'Sales pipeline', href: '/proposals', icon: FileText },
   { name: 'Jobs', desc: 'Live operations', href: '/jobs', icon: ClipboardList },
+  { name: 'Receipts', desc: 'Capture expenses', href: '/receipts', icon: Receipt },
   { name: 'Customers', desc: 'Accounts', href: '/customers', icon: Users },
   { name: 'Customer Links', desc: 'Share portals', href: '/admin/customer-links', icon: Users },
   { name: 'Settings', desc: 'System', href: '/settings', icon: Settings },
