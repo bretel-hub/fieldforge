@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState, type ComponentType } from 'rea
 import { Camera, Loader2, Mail, UploadCloud, X, ClipboardCheck } from 'lucide-react'
 import Link from 'next/link'
 import { DashboardLayout } from '@/components/DashboardLayout'
+import { offlineStorage, StoredJob } from '@/lib/offlineStorage'
 
 interface ReceiptRecord {
   id: string
@@ -39,6 +40,8 @@ const sourceMeta: Record<string, { label: string; icon: IconRenderer }> = {
   upload: { label: 'Upload', icon: UploadCloud }
 }
 
+const RECEIPT_CATEGORIES = ['Materials', 'Labor', 'Equipment', 'Permits', 'Other']
+
 const currencyFormat = (value: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -54,13 +57,12 @@ export default function ReceiptsPage() {
   const [selected, setSelected] = useState<ReceiptRecord | null>(null)
   const [showCapture, setShowCapture] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [projects, setProjects] = useState<StoredJob[]>([])
   const [form, setForm] = useState({
     vendorName: '',
     total: '',
     category: '',
-    source: 'scan',
-    jobReference: '',
-    paymentMethod: '',
+    projectId: '',
     notes: ''
   })
 
@@ -72,6 +74,13 @@ export default function ReceiptsPage() {
   useEffect(() => {
     fetchReceipts(filter)
   }, [filter])
+
+  useEffect(() => {
+    offlineStorage.getAllJobs().then((jobs) => {
+      const active = jobs.filter((j) => j.status !== 'complete')
+      setProjects(active)
+    }).catch(console.error)
+  }, [])
 
   const fetchReceipts = async (status?: string) => {
     setLoading(true)
@@ -96,13 +105,14 @@ export default function ReceiptsPage() {
 
     setSubmitting(true)
     try {
+      const selectedProject = projects.find((p) => p.id === form.projectId)
       const payload = {
         vendorName: form.vendorName,
         total: Number(form.total),
-        category: form.category,
-        source: form.source,
-        jobReference: form.jobReference || null,
-        paymentMethod: form.paymentMethod || null,
+        category: form.category || null,
+        source: 'scan',
+        jobReference: selectedProject ? (selectedProject.jobNumber || selectedProject.title) : null,
+        jobId: form.projectId || null,
         notes: form.notes || null
       }
 
@@ -116,7 +126,7 @@ export default function ReceiptsPage() {
 
       setReceipts((prev) => [data.receipt, ...prev])
       setShowCapture(false)
-      setForm({ vendorName: '', total: '', category: '', source: 'scan', jobReference: '', paymentMethod: '', notes: '' })
+      setForm({ vendorName: '', total: '', category: '', projectId: '', notes: '' })
     } catch (err) {
       console.error(err)
       alert(err instanceof Error ? err.message : 'Failed to save receipt')
@@ -350,6 +360,21 @@ export default function ReceiptsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
+              <label className="text-sm font-medium text-[var(--text-primary)] md:col-span-2">
+                Project
+                <select
+                  value={form.projectId}
+                  onChange={(e) => setForm((prev) => ({ ...prev, projectId: e.target.value }))}
+                  className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2"
+                >
+                  <option value="">— Select a project —</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.jobNumber ? `${project.jobNumber} – ` : ''}{project.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="text-sm font-medium text-[var(--text-primary)]">
                 Vendor
                 <input
@@ -371,44 +396,17 @@ export default function ReceiptsPage() {
                   className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
                 />
               </label>
-              <label className="text-sm font-medium text-[var(--text-primary)]">
+              <label className="text-sm font-medium text-[var(--text-primary)] md:col-span-2">
                 Category
-                <input
-                  type="text"
+                <select
                   value={form.category}
                   onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-                  placeholder="Materials, fuel, permits…"
-                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
-                />
-              </label>
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                Job reference
-                <input
-                  type="text"
-                  value={form.jobReference}
-                  onChange={(e) => setForm((prev) => ({ ...prev, jobReference: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
-                />
-              </label>
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                Payment method
-                <input
-                  type="text"
-                  value={form.paymentMethod}
-                  onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
-                />
-              </label>
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                Source
-                <select
-                  value={form.source}
-                  onChange={(e) => setForm((prev) => ({ ...prev, source: e.target.value }))}
                   className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2"
                 >
-                  <option value="scan">Scan</option>
-                  <option value="email">Email</option>
-                  <option value="upload">Upload</option>
+                  <option value="">— Select a category —</option>
+                  {RECEIPT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
               </label>
             </div>
