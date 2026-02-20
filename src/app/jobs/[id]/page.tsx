@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { PhotoCaptureComponent } from '@/components/PhotoCapture'
 import {
-  Camera, MapPin, Clock, User, Loader2, ArrowLeft,
+  Camera, MapPin, User, Loader2, ArrowLeft,
   DollarSign, CheckCircle2, AlertCircle, Save,
   Mail, Phone, Building2, CalendarDays, ChevronDown, ChevronUp,
   StickyNote, Plus,
@@ -344,13 +344,6 @@ export default function JobDetailPage() {
                   <p className="text-gray-900">{address}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <DollarSign className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Contract Value</p>
-                  <p className="font-semibold text-green-700">{formatCurrency(job.value)}</p>
-                </div>
-              </div>
               {job.projectTimeline && (
                 <div className="flex items-start gap-3">
                   <CalendarDays className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
@@ -362,13 +355,6 @@ export default function JobDetailPage() {
               )}
             </div>
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <Clock className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Scheduled</p>
-                  <p className="text-gray-900">{formatDate(job.scheduledDate)}</p>
-                </div>
-              </div>
               {job.estimatedCompletion && (
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
