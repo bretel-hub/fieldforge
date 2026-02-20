@@ -38,8 +38,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const NavContent = (
     <div className="flex h-full flex-col gap-8">
       <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[var(--shadow-soft)]">
-          <span className="font-['Cabinet_Grotesk'] text-base tracking-[0.25em] text-[var(--accent)]">FF</span>
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-[var(--shadow-soft)]">
+          <img src="/logos/ff-logo.svg" alt="FieldForge logo" className="h-10 w-auto" />
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-[var(--text-secondary)]">FieldForge</p>
@@ -106,12 +106,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="sticky top-0 z-40 flex h-20 items-center border-b border-[var(--border)] bg-white/80 px-4 backdrop-blur-sm md:px-10">
           <button
             type="button"
-            className="-m-2.5 mr-4 rounded-full border border-[var(--border)] p-2 text-[var(--text-secondary)] lg:hidden"
+            className="-m-2.5 mr-2 rounded-full border border-[var(--border)] p-2 text-[var(--text-secondary)] lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <span className="sr-only">Open sidebar</span>
             <Menu className="h-5 w-5" />
           </button>
+          <img src="/logos/ff-logo.svg" alt="FieldForge" className="mr-auto h-9 w-auto lg:hidden" />
           <div className="ml-auto flex items-center gap-3">
             <button className="rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)]">
               Support
