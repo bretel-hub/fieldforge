@@ -162,7 +162,7 @@ export default function ReceiptsPage() {
   return (
     <div className="space-y-8">
       <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 px-6 py-5 shadow-[var(--shadow-soft)]">
-        <h1 className="text-3xl font-['Sora'] text-[var(--text-primary)]">Receipts</h1>
+        <h1 className="text-3xl font-['Cabinet_Grotesk'] text-[var(--text-primary)]">Receipts</h1>
         <p className="text-sm text-[var(--text-secondary)]">
           Scan paper receipts or forward emailed receipts so every expense lands on the right job.
         </p>

@@ -75,7 +75,7 @@ const activities = [
 export function RecentActivity() {
   return (
     <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 p-6 shadow-[var(--shadow-soft)]">
-      <h3 className="text-lg font-['Sora'] text-[var(--text-primary)] mb-4">Recent Activity</h3>
+      <h3 className="text-lg font-['Cabinet_Grotesk'] text-[var(--text-primary)] mb-4">Recent Activity</h3>
       <div className="space-y-6">
         {activities.map((activity, idx) => (
           <div key={activity.id} className="relative pl-12">

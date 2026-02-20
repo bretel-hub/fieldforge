@@ -60,7 +60,7 @@ export function ActiveJobs() {
   return (
     <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 p-6 shadow-[var(--shadow-soft)]">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-['Sora'] text-[var(--text-primary)]">Active Jobs</h3>
+        <h3 className="text-lg font-['Cabinet_Grotesk'] text-[var(--text-primary)]">Active Jobs</h3>
         <span className="text-sm text-[var(--text-secondary)]">12 total</span>
       </div>
 
