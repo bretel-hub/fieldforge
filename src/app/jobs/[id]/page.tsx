@@ -258,123 +258,114 @@ export default function JobDetailPage() {
           </div>
         </div>
 
-        {/* ── Customer & Project Details ── */}
+        {/* ── Customer Information ── */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-base font-semibold text-gray-900 mb-5 flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-gray-400" />
-            Customer & Project Details
+            <User className="h-4 w-4 text-gray-400" />
+            Customer Information
           </h2>
-
-          {/* Customer info grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-            {/* Left col */}
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <Building2 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Company / Name</p>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Name</p>
                   <p className="text-gray-900 font-semibold">{job.customerName || '—'}</p>
                 </div>
               </div>
-              {job.customerContact && job.customerContact !== job.customerName && (
-                <div className="flex items-start gap-3">
-                  <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Contact Person</p>
-                    <p className="text-gray-900">{job.customerContact}</p>
-                  </div>
-                </div>
-              )}
-              {job.customerEmail && (
-                <div className="flex items-start gap-3">
-                  <Mail className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Email</p>
-                    <a href={`mailto:${job.customerEmail}`} className="text-blue-600 hover:underline">{job.customerEmail}</a>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right col */}
-            <div className="space-y-4">
-              {job.customerPhone && (
-                <div className="flex items-start gap-3">
-                  <Phone className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Phone</p>
+              <div className="flex items-start gap-3">
+                <Phone className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Phone</p>
+                  {job.customerPhone ? (
                     <a href={`tel:${job.customerPhone}`} className="text-blue-600 hover:underline">{job.customerPhone}</a>
-                  </div>
+                  ) : (
+                    <p className="text-gray-400">—</p>
+                  )}
                 </div>
-              )}
-              {job.customerAddress && (
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Address</p>
-                    <p className="text-gray-900">{job.customerAddress}</p>
-                  </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Mail className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Email</p>
+                  {job.customerEmail ? (
+                    <a href={`mailto:${job.customerEmail}`} className="text-blue-600 hover:underline">{job.customerEmail}</a>
+                  ) : (
+                    <p className="text-gray-400">—</p>
+                  )}
                 </div>
-              )}
+              </div>
+              <div className="flex items-start gap-3">
+                <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Address</p>
+                  <p className="text-gray-900">{job.customerAddress || '—'}</p>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="border-t border-gray-100 my-5" />
-
-          {/* Project details */}
-          <div className="mb-5">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Project Title</p>
-            <p className="text-gray-900 font-semibold text-base">{job.title}</p>
+        {/* ── Job Title & Description ── */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="mb-4">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Job Title</p>
+            <h2 className="text-lg font-semibold text-gray-900">{job.title}</h2>
           </div>
           {job.description && (
-            <div className="mb-5">
+            <div>
               <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-2">Description / Scope of Work</p>
               <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{job.description}</p>
             </div>
           )}
 
-          {/* Meta grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm pt-4 border-t border-gray-100">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Job Location</p>
-                  <p className="text-gray-900">{address}</p>
-                </div>
+          {/* Project meta */}
+          {(address !== '—' || job.projectTimeline || job.estimatedCompletion || job.technicianName) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm pt-5 mt-5 border-t border-gray-100">
+              <div className="space-y-4">
+                {address !== '—' && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Job Location</p>
+                      <p className="text-gray-900">{address}</p>
+                    </div>
+                  </div>
+                )}
+                {job.projectTimeline && (
+                  <div className="flex items-start gap-3">
+                    <CalendarDays className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Timeline</p>
+                      <p className="text-gray-900">{job.projectTimeline}</p>
+                    </div>
+                  </div>
+                )}
               </div>
-              {job.projectTimeline && (
-                <div className="flex items-start gap-3">
-                  <CalendarDays className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Timeline</p>
-                    <p className="text-gray-900">{job.projectTimeline}</p>
+              <div className="space-y-4">
+                {job.estimatedCompletion && (
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Est. Completion</p>
+                      <p className="text-gray-900">{formatDate(job.estimatedCompletion)}</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+                {job.technicianName && (
+                  <div className="flex items-start gap-3">
+                    <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Assigned To</p>
+                      <p className="text-gray-900">{job.technicianName}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="space-y-4">
-              {job.estimatedCompletion && (
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Est. Completion</p>
-                    <p className="text-gray-900">{formatDate(job.estimatedCompletion)}</p>
-                  </div>
-                </div>
-              )}
-              {job.technicianName && (
-                <div className="flex items-start gap-3">
-                  <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Assigned To</p>
-                    <p className="text-gray-900">{job.technicianName}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* ── Proposal Items (collapsible) ── */}
