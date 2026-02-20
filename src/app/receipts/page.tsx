@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState, type ComponentType } from 'rea
 import { Camera, Loader2, Mail, UploadCloud, X, ClipboardCheck } from 'lucide-react'
 import Link from 'next/link'
 import { DashboardLayout } from '@/components/DashboardLayout'
+import { offlineStorage, StoredJob } from '@/lib/offlineStorage'
 
 interface ReceiptRecord {
   id: string
@@ -39,6 +40,10 @@ const sourceMeta: Record<string, { label: string; icon: IconRenderer }> = {
   upload: { label: 'Upload', icon: UploadCloud }
 }
 
+const CATEGORY_OPTIONS = ['Materials', 'Labor', 'Equipment', 'Permits', 'Other']
+
+const ACTIVE_STATUSES = new Set(['not-started', 'scheduled', 'in-progress'])
+
 const currencyFormat = (value: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -54,12 +59,12 @@ export default function ReceiptsPage() {
   const [selected, setSelected] = useState<ReceiptRecord | null>(null)
   const [showCapture, setShowCapture] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [activeJobs, setActiveJobs] = useState<StoredJob[]>([])
   const [form, setForm] = useState({
     vendorName: '',
     total: '',
     category: '',
-    source: 'scan',
-    jobReference: '',
+    projectId: '',
     paymentMethod: '',
     notes: ''
   })
@@ -72,6 +77,12 @@ export default function ReceiptsPage() {
   useEffect(() => {
     fetchReceipts(filter)
   }, [filter])
+
+  useEffect(() => {
+    offlineStorage.getAllJobs().then((jobs) => {
+      setActiveJobs(jobs.filter((j) => ACTIVE_STATUSES.has(j.status as string)))
+    }).catch(() => setActiveJobs([]))
+  }, [])
 
   const fetchReceipts = async (status?: string) => {
     setLoading(true)
@@ -90,6 +101,11 @@ export default function ReceiptsPage() {
     }
   }
 
+  const selectedJob = useMemo(
+    () => activeJobs.find((j) => j.id === form.projectId) ?? null,
+    [activeJobs, form.projectId]
+  )
+
   const handleCreateReceipt = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!form.vendorName || !form.total) return
@@ -99,9 +115,12 @@ export default function ReceiptsPage() {
       const payload = {
         vendorName: form.vendorName,
         total: Number(form.total),
-        category: form.category,
-        source: form.source,
-        jobReference: form.jobReference || null,
+        category: form.category || null,
+        source: 'scan',
+        jobId: selectedJob?.id || null,
+        jobReference: selectedJob
+          ? (selectedJob.jobNumber ?? selectedJob.title)
+          : null,
         paymentMethod: form.paymentMethod || null,
         notes: form.notes || null
       }
@@ -116,7 +135,7 @@ export default function ReceiptsPage() {
 
       setReceipts((prev) => [data.receipt, ...prev])
       setShowCapture(false)
-      setForm({ vendorName: '', total: '', category: '', source: 'scan', jobReference: '', paymentMethod: '', notes: '' })
+      setForm({ vendorName: '', total: '', category: '', projectId: '', paymentMethod: '', notes: '' })
     } catch (err) {
       console.error(err)
       alert(err instanceof Error ? err.message : 'Failed to save receipt')
@@ -328,98 +347,101 @@ export default function ReceiptsPage() {
       )}
 
       {showCapture && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCapture(false)}>
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+          onClick={() => setShowCapture(false)}
+        >
           <form
             onSubmit={handleCreateReceipt}
-            className="w-full max-w-lg space-y-4 rounded-[var(--radius-xl)] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]"
+            className="w-full max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-2xl sm:rounded-[var(--radius-xl)] border border-[var(--border)] bg-white shadow-[var(--shadow-soft)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between">
+            <div className="sticky top-0 flex items-center justify-between border-b border-[var(--border)] bg-white px-5 py-4 rounded-t-2xl sm:rounded-t-[var(--radius-xl)]">
               <h2 className="text-lg font-[Space Grotesk] text-[var(--text-primary)]">Scan receipt</h2>
               <button type="button" className="rounded-full border border-[var(--border)] p-2 text-[var(--text-secondary)]" onClick={() => setShowCapture(false)}>
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                Vendor
-                <input
-                  type="text"
-                  required
-                  value={form.vendorName}
-                  onChange={(e) => setForm((prev) => ({ ...prev, vendorName: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
-                />
-              </label>
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                Total amount
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  value={form.total}
-                  onChange={(e) => setForm((prev) => ({ ...prev, total: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
-                />
-              </label>
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                Category
-                <input
-                  type="text"
-                  value={form.category}
-                  onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-                  placeholder="Materials, fuel, permits…"
-                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
-                />
-              </label>
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                Job reference
-                <input
-                  type="text"
-                  value={form.jobReference}
-                  onChange={(e) => setForm((prev) => ({ ...prev, jobReference: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
-                />
-              </label>
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                Payment method
-                <input
-                  type="text"
-                  value={form.paymentMethod}
-                  onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
-                />
-              </label>
-              <label className="text-sm font-medium text-[var(--text-primary)]">
-                Source
+            <div className="px-5 py-4 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  Vendor
+                  <input
+                    type="text"
+                    required
+                    value={form.vendorName}
+                    onChange={(e) => setForm((prev) => ({ ...prev, vendorName: e.target.value }))}
+                    className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
+                  />
+                </label>
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  Total amount
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={form.total}
+                    onChange={(e) => setForm((prev) => ({ ...prev, total: e.target.value }))}
+                    className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
+                  />
+                </label>
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  Category
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+                    className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2"
+                  >
+                    <option value="">Select category…</option>
+                    {CATEGORY_OPTIONS.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm font-medium text-[var(--text-primary)]">
+                  Payment method
+                  <input
+                    type="text"
+                    value={form.paymentMethod}
+                    onChange={(e) => setForm((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+                    className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
+                  />
+                </label>
+              </div>
+
+              <label className="block text-sm font-medium text-[var(--text-primary)]">
+                Attach to project
                 <select
-                  value={form.source}
-                  onChange={(e) => setForm((prev) => ({ ...prev, source: e.target.value }))}
+                  value={form.projectId}
+                  onChange={(e) => setForm((prev) => ({ ...prev, projectId: e.target.value }))}
                   className="mt-1 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2"
                 >
-                  <option value="scan">Scan</option>
-                  <option value="email">Email</option>
-                  <option value="upload">Upload</option>
+                  <option value="">No project</option>
+                  {activeJobs.map((job) => (
+                    <option key={job.id} value={job.id}>
+                      {job.jobNumber ? `${job.jobNumber} — ` : ''}{job.title}
+                    </option>
+                  ))}
                 </select>
               </label>
+
+              <label className="block text-sm font-medium text-[var(--text-primary)]">
+                Notes
+                <textarea
+                  value={form.notes}
+                  onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+                  className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
+                  rows={3}
+                />
+              </label>
+
+              <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-alt)]/70 px-4 py-6 text-center text-sm text-[var(--text-secondary)]">
+                Image + OCR pipeline coming next. For now, attach via email or add context in notes.
+              </div>
             </div>
 
-            <label className="text-sm font-medium text-[var(--text-primary)]">
-              Notes
-              <textarea
-                value={form.notes}
-                onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-                className="mt-1 w-full rounded-md border border-[var(--border)] px-3 py-2"
-                rows={3}
-              />
-            </label>
-
-            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-alt)]/70 px-4 py-6 text-center text-sm text-[var(--text-secondary)]">
-              Image + OCR pipeline coming next. For now, attach via email or add context in notes.
-            </div>
-
-            <div className="flex justify-end gap-3">
+            <div className="sticky bottom-0 flex justify-end gap-3 border-t border-[var(--border)] bg-white px-5 py-4">
               <button
                 type="button"
                 className="inline-flex items-center justify-center rounded-full border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)]"
