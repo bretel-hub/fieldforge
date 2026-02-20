@@ -1,18 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "FieldForge - Field Service Management",
@@ -79,7 +68,7 @@ export default function RootLayout({
         <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gray-50`}
+        className="antialiased min-h-screen bg-gray-50"
       >
         <ServiceWorkerRegistration />
         {children}

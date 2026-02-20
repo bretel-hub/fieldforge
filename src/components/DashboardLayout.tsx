@@ -4,7 +4,7 @@ import { ReactNode, useState } from 'react'
 import {
   LayoutDashboard,
   FileText,
-  Camera,
+  Wrench,
   Users,
   Settings,
   Menu,
@@ -23,7 +23,7 @@ interface DashboardLayoutProps {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Proposals', href: '/proposals', icon: FileText },
-  { name: 'Jobs', href: '/jobs', icon: Camera },
+  { name: 'Jobs', href: '/jobs', icon: Wrench },
   { name: 'Projects', href: '/projects', icon: Briefcase },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Partners', href: '/partners', icon: Handshake },

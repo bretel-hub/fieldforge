@@ -41,10 +41,11 @@ const formatDate = (dateString?: string) => {
 const normalizeStatus = (status?: StoredJob['status']) => {
   if (!status) return 'not-started'
   // Migrate legacy status values to new set
-  if (status === 'completed' || status === 'completing') return 'complete'
-  if (status === 'starting-soon' || status === 'pending') return 'scheduled'
-  if (status === 'in_progress') return 'in-progress'
-  if (status === 'cancelled') return 'on-hold'
+  const s = status as string
+  if (s === 'completed' || s === 'completing') return 'complete'
+  if (s === 'starting-soon' || s === 'pending') return 'scheduled'
+  if (s === 'in_progress') return 'in-progress'
+  if (s === 'cancelled') return 'on-hold'
   return status
 }
 
