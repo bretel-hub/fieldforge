@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState, type ComponentType } from 'react'
 import { Camera, Loader2, Mail, UploadCloud, X, ClipboardCheck } from 'lucide-react'
 import Link from 'next/link'
+import { DashboardLayout } from '@/components/DashboardLayout'
 
 interface ReceiptRecord {
   id: string
@@ -160,6 +161,7 @@ export default function ReceiptsPage() {
   }
 
   return (
+    <DashboardLayout>
     <div className="space-y-8">
       <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white/90 px-6 py-5 shadow-[var(--shadow-soft)]">
         <h1 className="text-3xl font-['Sora'] text-[var(--text-primary)]">Receipts</h1>
@@ -438,5 +440,6 @@ export default function ReceiptsPage() {
         </div>
       )}
     </div>
+    </DashboardLayout>
   )
 }
