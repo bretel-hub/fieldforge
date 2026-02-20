@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+type RouteContext = { params: Promise<{ id: string }> }
+
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
+    const { id } = await context.params
     const updates = await request.json()
     const permittedFields = {
       vendor_name: updates.vendorName,
@@ -43,7 +46,7 @@ export async function PATCH(
     const { data, error } = await supabase
       .from('receipts')
       .update(payload)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -61,10 +64,11 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
-    const { error } = await supabase.from('receipts').delete().eq('id', params.id)
+    const { id } = await context.params
+    const { error } = await supabase.from('receipts').delete().eq('id', id)
 
     if (error) {
       console.error('[API] Failed to delete receipt:', error)

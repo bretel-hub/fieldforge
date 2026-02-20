@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState, type ComponentType } from 'react'
 import {
   Camera,
   Loader2,
@@ -31,7 +31,7 @@ interface ReceiptRecord {
   created_at?: string
 }
 
-type IconRenderer = (props: { className?: string }) => JSX.Element
+type IconRenderer = ComponentType<{ className?: string }>
 
 const statusTabs = [
   { id: 'inbox', label: 'Inbox' },
