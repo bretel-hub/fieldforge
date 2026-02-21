@@ -4,9 +4,13 @@ import { supabase } from '@/lib/supabase'
 export async function GET(request: NextRequest) {
   try {
     const status = request.nextUrl.searchParams.get('status')
+    const jobRef = request.nextUrl.searchParams.get('jobRef')
     let query = supabase.from('receipts').select('*').order('created_at', { ascending: false })
     if (status && status !== 'all') {
       query = query.eq('status', status)
+    }
+    if (jobRef) {
+      query = query.eq('job_reference', jobRef)
     }
 
     const { data, error } = await query
