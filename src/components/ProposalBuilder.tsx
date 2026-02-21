@@ -22,7 +22,7 @@ interface ProposalBuilderProps {
   initialStatus?: string
   initialData?: {
     customer: { name: string; contact: string; email: string; address: string }
-    projectDetails: { title: string; description: string; location: string; timeline: string }
+    projectDetails: { title: string; description: string; location: string }
     items: LineItem[]
   }
 }
@@ -33,7 +33,7 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
   )
 
   const [projectDetails, setProjectDetails] = useState(
-    initialData?.projectDetails ?? { title: '', description: '', location: '', timeline: '' }
+    initialData?.projectDetails ?? { title: '', description: '', location: '' }
   )
 
   const initItems = initialData?.items ?? []
@@ -141,7 +141,6 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
             value: total,
             location: { address: projectDetails.location || customer.address },
             description: projectDetails.description,
-            projectTimeline: projectDetails.timeline || undefined,
             projectLocation: projectDetails.location || undefined,
             lineItems: items.length > 0 ? items.map(item => ({
               id: item.id,
@@ -289,18 +288,6 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
               onChange={(e) => setProjectDetails({...projectDetails, description: e.target.value})}
               className="w-full rounded-md border-gray-300 shadow-sm"
               placeholder="Complete security system overhaul including cameras, access control, and monitoring..."
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Timeline
-            </label>
-            <input
-              type="text"
-              value={projectDetails.timeline}
-              onChange={(e) => setProjectDetails({...projectDetails, timeline: e.target.value})}
-              className="w-full rounded-md border-gray-300 shadow-sm"
-              placeholder="2-3 weeks"
             />
           </div>
         </div>

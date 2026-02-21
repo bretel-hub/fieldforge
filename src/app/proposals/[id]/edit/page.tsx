@@ -31,7 +31,6 @@ export default async function EditProposalPage({
       title: proposal.project_title ?? '',
       description: proposal.project_description ?? '',
       location: proposal.project_location ?? '',
-      timeline: proposal.project_timeline ?? '',
     },
     items: (proposal.proposal_line_items ?? []).map((item: any) => ({
       id: item.id,
