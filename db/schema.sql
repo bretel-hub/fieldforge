@@ -154,3 +154,33 @@ CREATE TRIGGER update_receipts_updated_at
   BEFORE UPDATE ON receipts
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- Job photos table (for cross-device sync)
+CREATE TABLE IF NOT EXISTS job_photos (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  data_url TEXT,
+  mime_type VARCHAR(100) DEFAULT 'image/jpeg',
+  size INTEGER DEFAULT 0,
+  captured_at TIMESTAMP WITH TIME ZONE,
+  latitude DECIMAL(10, 7),
+  longitude DECIMAL(10, 7),
+  accuracy DECIMAL(10, 2),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_photos_job_id ON job_photos(job_id);
+CREATE INDEX IF NOT EXISTS idx_job_photos_captured_at ON job_photos(captured_at DESC);
+
+-- Job notes table (for cross-device sync)
+CREATE TABLE IF NOT EXISTS job_notes (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  text TEXT NOT NULL,
+  timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_notes_job_id ON job_notes(job_id);
+CREATE INDEX IF NOT EXISTS idx_job_notes_timestamp ON job_notes(timestamp DESC);
