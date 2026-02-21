@@ -112,12 +112,10 @@ export default function JobDetailPage() {
   const [receipts, setReceipts] = useState<any[]>([])
   const [receiptsLoading, setReceiptsLoading] = useState(false)
   const [showReceiptForm, setShowReceiptForm] = useState(false)
-  const [allProjects, setAllProjects] = useState<StoredJob[]>([])
   const [receiptForm, setReceiptForm] = useState({
     vendorName: '',
     total: '',
     category: '',
-    projectId: '',
     notes: '',
   })
   const [receiptPhoto, setReceiptPhoto] = useState<{ file: File; preview: string } | null>(null)
@@ -208,10 +206,6 @@ export default function JobDetailPage() {
     }
     loadJob()
   }, [jobId])
-
-  useEffect(() => {
-    offlineStorage.getAllJobs().then(jobs => setAllProjects(jobs)).catch(console.error)
-  }, [])
 
   const handlePhotoCapture = async (_photo: PhotoCapture) => {
     await loadPhotos()
@@ -320,10 +314,7 @@ export default function JobDetailPage() {
     if (!job || !receiptForm.vendorName || !receiptForm.total) return
     setReceiptSubmitting(true)
     try {
-      const selectedProject = allProjects.find(p => p.id === receiptForm.projectId)
-      const jobRef = selectedProject
-        ? (selectedProject.jobNumber || selectedProject.title)
-        : (job.jobNumber || job.title)
+      const jobRef = job.jobNumber || job.title
 
       const payload = {
         vendorName: receiptForm.vendorName,
@@ -346,7 +337,7 @@ export default function JobDetailPage() {
 
       setReceipts(prev => [data.receipt, ...prev])
       setShowReceiptForm(false)
-      setReceiptForm({ vendorName: '', total: '', category: '', projectId: job.id, notes: '' })
+      setReceiptForm({ vendorName: '', total: '', category: '', notes: '' })
       setReceiptPhoto(null)
       if (receiptPhotoRef.current) receiptPhotoRef.current.value = ''
     } catch (err) {
@@ -881,10 +872,7 @@ export default function JobDetailPage() {
             {!showReceiptForm && (
               <div className="flex items-center gap-2">
                 <Button
-                  onClick={() => {
-                    setReceiptForm(prev => ({ ...prev, projectId: job.id }))
-                    setShowReceiptForm(true)
-                  }}
+                  onClick={() => setShowReceiptForm(true)}
                   size="sm"
                   variant="outline"
                   className="text-green-700 border-green-300 hover:bg-green-50"
@@ -948,21 +936,6 @@ export default function JobDetailPage() {
 
                 {/* Form fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Project</label>
-                    <select
-                      value={receiptForm.projectId}
-                      onChange={(e) => setReceiptForm(prev => ({ ...prev, projectId: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">— Select a project —</option>
-                      {allProjects.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.jobNumber ? `${p.jobNumber} – ` : ''}{p.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Vendor</label>
                     <input
