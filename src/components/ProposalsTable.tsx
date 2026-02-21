@@ -169,7 +169,7 @@ export function ProposalsTable() {
             id: jobId,
             jobNumber: `JOB-${proposal.proposal_number}`,
             title: proposal.project_title,
-            status: 'scheduled',
+            status: 'not-started',
             customerId: proposal.customer_name || proposal.customer_contact,
             customerName: proposal.customer_name || proposal.customer_contact,
             customerContact,

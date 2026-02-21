@@ -130,7 +130,7 @@ export function ProposalBuilder({ proposalId, proposalNumber, initialStatus, ini
             id: jobId,
             jobNumber: proposalNumber ? `JOB-${proposalNumber}` : jobId,
             title: projectDetails.title,
-            status: 'scheduled',
+            status: 'not-started',
             customerId: customer.name || customer.contact,
             customerName: customer.name || customer.contact,
             customerContact: customer.contact || undefined,
