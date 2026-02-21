@@ -632,17 +632,41 @@ export default function JobDetailPage() {
               )}
             </button>
 
-            {logTab === 'photos' && !selectMode && (
+            {logTab === 'photos' && (
               <div className="ml-auto pr-5 flex items-center gap-2">
-                <Button
-                  onClick={() => setShowCamera(true)}
-                  size="sm"
-                  variant="outline"
-                  className="text-green-700 border-green-300 hover:bg-green-50"
-                >
-                  <Camera className="h-3.5 w-3.5 mr-1.5" />
-                  Add Photo
-                </Button>
+                {savedPhotos.length > 0 && !selectMode && (
+                  <Button
+                    onClick={() => setSelectMode(true)}
+                    size="sm"
+                    variant="outline"
+                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1.5" />
+                    Select
+                  </Button>
+                )}
+                {selectMode && (
+                  <Button
+                    onClick={handleExitSelectMode}
+                    size="sm"
+                    variant="outline"
+                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                  >
+                    <X className="h-3.5 w-3.5 mr-1.5" />
+                    Cancel
+                  </Button>
+                )}
+                {!selectMode && (
+                  <Button
+                    onClick={() => setShowCamera(true)}
+                    size="sm"
+                    variant="outline"
+                    className="text-green-700 border-green-300 hover:bg-green-50"
+                  >
+                    <Camera className="h-3.5 w-3.5 mr-1.5" />
+                    Add Photo
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -702,22 +726,7 @@ export default function JobDetailPage() {
           {/* Photos tab */}
           {logTab === 'photos' && (
             <div className="p-6">
-              {/* Select button (before entering select mode) */}
-              {!selectMode && savedPhotos.length > 0 && (
-                <div className="mb-4">
-                  <Button
-                    onClick={() => setSelectMode(true)}
-                    size="sm"
-                    variant="outline"
-                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
-                  >
-                    <Check className="h-3.5 w-3.5 mr-1.5" />
-                    Select
-                  </Button>
-                </div>
-              )}
-
-              {/* Selection toolbar (in select mode) */}
+              {/* Selection toolbar */}
               {selectMode && savedPhotos.length > 0 && (
                 <div className="flex items-center justify-between mb-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5">
                   <div className="flex items-center gap-3">
@@ -731,26 +740,15 @@ export default function JobDetailPage() {
                       {selectedPhotoIds.size} of {savedPhotos.length} selected
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={() => setShowPhotoDeleteConfirm(true)}
-                      disabled={selectedPhotoIds.size === 0}
-                      size="sm"
-                      className="bg-red-600 hover:bg-red-700 disabled:opacity-40"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                      Delete{selectedPhotoIds.size > 0 ? ` (${selectedPhotoIds.size})` : ''}
-                    </Button>
-                    <Button
-                      onClick={handleExitSelectMode}
-                      size="sm"
-                      variant="outline"
-                      className="text-gray-600 border-gray-300 hover:bg-gray-50"
-                    >
-                      <X className="h-3.5 w-3.5 mr-1.5" />
-                      Cancel
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={() => setShowPhotoDeleteConfirm(true)}
+                    disabled={selectedPhotoIds.size === 0}
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                    Delete{selectedPhotoIds.size > 0 ? ` (${selectedPhotoIds.size})` : ''}
+                  </Button>
                 </div>
               )}
 
