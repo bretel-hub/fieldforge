@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { PhotoCaptureComponent } from '@/components/PhotoCapture'
@@ -125,6 +125,7 @@ export default function JobDetailPage() {
   })
   const [receiptPhoto, setReceiptPhoto] = useState<{ file: File; preview: string } | null>(null)
   const [receiptSubmitting, setReceiptSubmitting] = useState(false)
+  const [expandedReceiptId, setExpandedReceiptId] = useState<string | null>(null)
   const receiptPhotoRef = useRef<HTMLInputElement>(null)
 
   const loadPhotos = async () => {
@@ -1048,7 +1049,7 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {/* Receipts list */}
+            {/* Receipts table */}
             {receiptsLoading ? (
               <div className="flex items-center justify-center py-8 text-gray-400">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
@@ -1061,40 +1062,78 @@ export default function JobDetailPage() {
                 <p className="text-xs mt-1">Upload a photo or email a receipt to track expenses</p>
               </div>
             ) : receipts.length > 0 ? (
-              <div className="space-y-3">
-                {receipts.map(receipt => (
-                  <div
-                    key={receipt.id}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 ${
-                        receipt.source === 'email' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
-                      }`}>
-                        {receipt.source === 'email'
-                          ? <Mail className="h-4 w-4" />
-                          : <Camera className="h-4 w-4" />
-                        }
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{receipt.vendor_name}</p>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                          {receipt.category && (
-                            <span className={`inline-flex px-1.5 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[receipt.category] ?? CATEGORY_COLORS['Other']}`}>
-                              {receipt.category}
-                            </span>
-                          )}
-                          {receipt.created_at && (
-                            <span>{formatDate(receipt.created_at)}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-900 shrink-0 ml-3">
-                      {formatCurrency(receipt.total)}
-                    </p>
-                  </div>
-                ))}
+              <div className="overflow-hidden rounded-lg border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Vendor</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Category</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">$Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {receipts.map(receipt => (
+                      <React.Fragment key={receipt.id}>
+                        <tr
+                          onClick={() => setExpandedReceiptId(prev => prev === receipt.id ? null : receipt.id)}
+                          className="cursor-pointer hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-4 py-3 font-medium text-gray-900 truncate max-w-[180px]">{receipt.vendor_name}</td>
+                          <td className="px-4 py-3">
+                            {receipt.category ? (
+                              <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[receipt.category] ?? CATEGORY_COLORS['Other']}`}>
+                                {receipt.category}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right font-semibold text-gray-900 whitespace-nowrap">{formatCurrency(receipt.total)}</td>
+                        </tr>
+                        {expandedReceiptId === receipt.id && (
+                          <tr>
+                            <td colSpan={3} className="bg-gray-50 px-4 py-4">
+                              <div className="space-y-3">
+                                {receipt.media_url && (
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Photo</p>
+                                    <img
+                                      src={receipt.media_url}
+                                      alt={`Receipt from ${receipt.vendor_name}`}
+                                      className="max-h-48 rounded-lg border border-gray-200 object-contain"
+                                    />
+                                  </div>
+                                )}
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Vendor</p>
+                                    <p className="text-sm text-gray-900 mt-0.5">{receipt.vendor_name}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Category</p>
+                                    <p className="text-sm text-gray-900 mt-0.5">{receipt.category || '—'}</p>
+                                  </div>
+                                </div>
+                                {receipt.notes && (
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Notes</p>
+                                    <p className="text-sm text-gray-700 mt-0.5 whitespace-pre-wrap">{receipt.notes}</p>
+                                  </div>
+                                )}
+                                {receipt.created_at && (
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date</p>
+                                    <p className="text-sm text-gray-700 mt-0.5">{formatDate(receipt.created_at)}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ) : null}
               </div>
