@@ -129,9 +129,65 @@ export default function JobDetailPage() {
   const [expandedReceiptId, setExpandedReceiptId] = useState<string | null>(null)
   const receiptPhotoRef = useRef<HTMLInputElement>(null)
 
+  // Cloud notes for cross-device sync
+  const [cloudNotes, setCloudNotes] = useState<Array<{ id: string; text: string; timestamp: string }>>([])
+
   const loadPhotos = async () => {
-    const photos = await offlineStorage.getPhotosByJob(jobId)
-    setSavedPhotos(photos)
+    // Load from IndexedDB (local/offline)
+    const localPhotos = await offlineStorage.getPhotosByJob(jobId)
+
+    // Load from Supabase (cloud/cross-device)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let remotePhotos: any[] = []
+    try {
+      const res = await fetch(`/api/photos?jobId=${encodeURIComponent(jobId)}`)
+      const data = await res.json()
+      if (data.success && data.photos) {
+        remotePhotos = data.photos
+      }
+    } catch (err) {
+      console.error('Failed to load cloud photos', err)
+    }
+
+    // Merge: local photos take precedence (they have blobs for offline use)
+    const localIds = new Set(localPhotos.map(p => p.id))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cloudOnly = remotePhotos.filter((p: any) => !localIds.has(p.id)).map((p: any) => ({
+      id: p.id,
+      jobId: p.job_id,
+      fileName: p.file_name,
+      dataUrl: p.data_url,
+      mimeType: p.mime_type || 'image/jpeg',
+      size: p.size || 0,
+      capturedAt: p.captured_at || p.created_at,
+      location: p.latitude != null ? {
+        latitude: Number(p.latitude),
+        longitude: Number(p.longitude),
+        accuracy: p.accuracy ? Number(p.accuracy) : undefined,
+      } : undefined,
+      syncStatus: 'synced' as const,
+      lastModified: Date.now(),
+      blob: new Blob(),
+    }))
+
+    setSavedPhotos([...localPhotos, ...cloudOnly])
+  }
+
+  const loadNotes = async () => {
+    try {
+      const res = await fetch(`/api/notes?jobId=${encodeURIComponent(jobId)}`)
+      const data = await res.json()
+      if (data.success && data.notes) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setCloudNotes(data.notes.map((n: any) => ({
+          id: n.id,
+          text: n.text,
+          timestamp: n.timestamp,
+        })))
+      }
+    } catch (err) {
+      console.error('Failed to load cloud notes', err)
+    }
   }
 
   const loadReceipts = async (jobRef: string) => {
@@ -203,6 +259,7 @@ export default function JobDetailPage() {
           setStatus(normalizeStatus(stored.status))
         }
         await loadPhotos()
+        loadNotes()
         if (stored) {
           loadReceipts(stored.jobNumber || stored.title)
         }
@@ -249,6 +306,8 @@ export default function JobDetailPage() {
         text: newNote.trim(),
         timestamp: new Date().toISOString(),
       }
+
+      // Save to IndexedDB (offline support)
       const updatedEntries = [entry, ...(job.noteEntries ?? [])]
       const updatedJob: Omit<StoredJob, 'lastModified'> = {
         ...job,
@@ -257,6 +316,24 @@ export default function JobDetailPage() {
       }
       await offlineStorage.saveJob(updatedJob)
       setJob({ ...updatedJob, lastModified: Date.now() })
+
+      // Save to Supabase (cross-device sync)
+      try {
+        await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: entry.id,
+            jobId,
+            text: entry.text,
+            timestamp: entry.timestamp,
+          }),
+        })
+        setCloudNotes(prev => [entry, ...prev])
+      } catch (err) {
+        console.error('Failed to sync note to cloud', err)
+      }
+
       setNewNote('')
     } catch (err) {
       console.error('Failed to save note', err)
@@ -295,7 +372,16 @@ export default function JobDetailPage() {
     setDeletingPhotos(true)
     try {
       await Promise.all(
-        Array.from(selectedPhotoIds).map(id => offlineStorage.deletePhoto(id))
+        Array.from(selectedPhotoIds).map(async (id) => {
+          // Delete from IndexedDB
+          await offlineStorage.deletePhoto(id)
+          // Delete from Supabase (cross-device)
+          try {
+            await fetch(`/api/photos/${id}`, { method: 'DELETE' })
+          } catch {
+            // non-fatal — cloud delete can be retried
+          }
+        })
       )
       await loadPhotos()
       setSelectedPhotoIds(new Set())
@@ -431,7 +517,15 @@ export default function JobDetailPage() {
   }
 
   const statusColor = STATUS_COLORS[status] ?? STATUS_COLORS['not-started']
-  const noteEntries = job.noteEntries ?? []
+  // Merge cloud notes with local notes, deduplicating by ID
+  const mergedNoteIds = new Set<string>()
+  const noteEntries = [...cloudNotes, ...(job.noteEntries ?? [])]
+    .filter(n => {
+      if (mergedNoteIds.has(n.id)) return false
+      mergedNoteIds.add(n.id)
+      return true
+    })
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   const hasItems = job.lineItems && job.lineItems.length > 0
 
   return (

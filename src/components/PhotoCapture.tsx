@@ -233,14 +233,18 @@ export function PhotoCaptureComponent({
       if (navigator.onLine) {
         try {
           const formData = new FormData()
+          formData.append('id', capturedPhoto.id)
           formData.append('file', capturedPhoto.blob, capturedPhoto.fileName)
           formData.append('jobId', capturedPhoto.jobId || '')
           formData.append('taskId', capturedPhoto.taskId || '')
           formData.append('capturedAt', capturedPhoto.timestamp.toISOString())
-          
+
           if (capturedPhoto.location) {
             formData.append('latitude', capturedPhoto.location.coords.latitude.toString())
             formData.append('longitude', capturedPhoto.location.coords.longitude.toString())
+            if (capturedPhoto.location.coords.accuracy) {
+              formData.append('accuracy', capturedPhoto.location.coords.accuracy.toString())
+            }
           }
 
           const response = await fetch('/api/photos', {
