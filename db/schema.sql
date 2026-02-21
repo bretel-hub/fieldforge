@@ -125,7 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_partner_costs_partner_id ON partner_costs(partner
 CREATE TABLE IF NOT EXISTS receipts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   job_reference TEXT,
-  job_id UUID,
+  job_id TEXT,
   proposal_id UUID REFERENCES proposals(id) ON DELETE SET NULL,
   vendor_name TEXT NOT NULL,
   category TEXT,
@@ -184,3 +184,14 @@ CREATE TABLE IF NOT EXISTS job_notes (
 
 CREATE INDEX IF NOT EXISTS idx_job_notes_job_id ON job_notes(job_id);
 CREATE INDEX IF NOT EXISTS idx_job_notes_timestamp ON job_notes(timestamp DESC);
+
+-- =============================================================================
+-- MIGRATION: receipts.job_id UUID → TEXT
+-- Run this on existing databases where the receipts table already exists:
+--
+--   ALTER TABLE receipts ALTER COLUMN job_id TYPE TEXT;
+--
+-- This is required because job IDs in the app are text strings (e.g. "JOB-001",
+-- "JOB-<proposalUUID>"), not bare UUIDs. The UUID column type caused inserts
+-- and queries to fail silently, preventing receipts from persisting to Supabase.
+-- =============================================================================

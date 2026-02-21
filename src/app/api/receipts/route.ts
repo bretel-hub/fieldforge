@@ -10,11 +10,12 @@ export async function GET(request: NextRequest) {
     if (status && status !== 'all') {
       query = query.eq('status', status)
     }
-    if (jobId) {
-      // Prefer job_id lookup (stable UUID) with fallback to job_reference text match
-      query = query.or(`job_id.eq.${jobId},job_reference.eq.${jobRef || ''}`)
-    } else if (jobRef) {
-      query = query.eq('job_reference', jobRef)
+    if (jobId || jobRef) {
+      // Match receipts by job_id (stable text ID) or job_reference (human-readable)
+      const conditions: string[] = []
+      if (jobId) conditions.push(`job_id.eq.${jobId}`)
+      if (jobRef) conditions.push(`job_reference.eq.${jobRef}`)
+      query = query.or(conditions.join(','))
     }
 
     const { data, error } = await query
