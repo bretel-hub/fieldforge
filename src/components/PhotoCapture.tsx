@@ -438,24 +438,26 @@ export function PhotoCaptureComponent({
         onChange={handleFileInput}
       />
 
-      {/* Status Bar */}
-      <div className="absolute top-0 left-0 right-0 bg-black/50 backdrop-blur-sm z-10">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${navigator.onLine ? 'bg-green-500' : 'bg-red-500'}`} />
-            <span className="text-white text-sm">
-              {navigator.onLine ? 'Online' : 'Offline'}
-            </span>
-          </div>
+      {/* Status Bar - hidden during photo confirmation */}
+      {!capturedPhoto && (
+        <div className="absolute top-0 left-0 right-0 bg-black/50 backdrop-blur-sm z-10">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${navigator.onLine ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-white text-sm">
+                {navigator.onLine ? 'Online' : 'Offline'}
+              </span>
+            </div>
 
-          <div className="flex items-center space-x-2">
-            <MapPin className={`h-4 w-4 ${locationStatus === 'granted' ? 'text-green-500' : 'text-gray-400'}`} />
-            <span className="text-white text-sm">
-              {locationStatus === 'granted' ? 'GPS' : 'No GPS'}
-            </span>
+            <div className="flex items-center space-x-2">
+              <MapPin className={`h-4 w-4 ${locationStatus === 'granted' ? 'text-green-500' : 'text-gray-400'}`} />
+              <span className="text-white text-sm">
+                {locationStatus === 'granted' ? 'GPS' : 'No GPS'}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Camera View */}
       <div className="relative w-full h-full">
@@ -483,29 +485,6 @@ export function PhotoCaptureComponent({
             alt="Captured photo"
             className="w-full h-full object-cover"
           />
-        )}
-
-        {/* Photo Info Overlay */}
-        {capturedPhoto && (
-          <div className="absolute top-16 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg p-3 text-white text-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <div>Size: {Math.round(capturedPhoto.size / 1024)}KB</div>
-                <div>Time: {capturedPhoto.timestamp.toLocaleTimeString()}</div>
-              </div>
-              {capturedPhoto.location && (
-                <div className="text-right">
-                  <div className="flex items-center">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    GPS Location
-                  </div>
-                  <div className="text-xs opacity-75">
-                    ±{Math.round(capturedPhoto.location.coords.accuracy || 0)}m
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
         )}
 
         {/* Controls */}
