@@ -7,7 +7,7 @@ import { PhotoCaptureComponent } from '@/components/PhotoCapture'
 import {
   Camera, MapPin, User, Loader2, ArrowLeft,
   DollarSign, CheckCircle2, AlertCircle, Save,
-  Mail, Phone, Building2, CalendarDays, ChevronDown, ChevronUp,
+  Mail, Phone, Building2, ChevronDown, ChevronUp,
   StickyNote, Plus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -323,39 +323,33 @@ export default function JobDetailPage() {
             </div>
           )}
 
-          {/* Project meta */}
-          {(job.projectTimeline || job.estimatedCompletion || job.technicianName) && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm pt-5 mt-5 border-t border-gray-100">
-              <div className="space-y-4">
-                {job.projectTimeline && (
-                  <div className="flex items-start gap-3">
-                    <CalendarDays className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Timeline</p>
-                      <p className="text-gray-900">{job.projectTimeline}</p>
+          {/* Project Details */}
+          {(job.estimatedCompletion || job.technicianName) && (
+            <div className="pt-5 mt-5 border-t border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">Project Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                <div className="space-y-4">
+                  {job.estimatedCompletion && (
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Est. Completion</p>
+                        <p className="text-gray-900">{formatDate(job.estimatedCompletion)}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-4">
-                {job.estimatedCompletion && (
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Est. Completion</p>
-                      <p className="text-gray-900">{formatDate(job.estimatedCompletion)}</p>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  {job.technicianName && (
+                    <div className="flex items-start gap-3">
+                      <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Assigned To</p>
+                        <p className="text-gray-900">{job.technicianName}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
-                {job.technicianName && (
-                  <div className="flex items-start gap-3">
-                    <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Assigned To</p>
-                      <p className="text-gray-900">{job.technicianName}</p>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           )}
