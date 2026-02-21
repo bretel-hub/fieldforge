@@ -9,7 +9,7 @@ import {
   DollarSign, CheckCircle2, AlertCircle, Save,
   Mail, Phone, ChevronDown, ChevronUp,
   StickyNote, Plus, Trash2, Pencil, X, Clock, Check,
-  Receipt, UploadCloud,
+  Receipt,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PhotoCapture } from '@/lib/cameraService'
@@ -114,6 +114,7 @@ export default function JobDetailPage() {
   const [deletingPhotos, setDeletingPhotos] = useState(false)
 
   // Receipts section
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [receipts, setReceipts] = useState<any[]>([])
   const [receiptsLoading, setReceiptsLoading] = useState(false)
   const [showReceiptForm, setShowReceiptForm] = useState(false)
@@ -170,7 +171,8 @@ export default function JobDetailPage() {
                 const data = await res.json()
                 if (data.success && data.proposal) {
                   const p = data.proposal
-                  const proposalItems = (p.items || []).map((item: any) => ({
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const proposalItems = (p.items || []).map((item: Record<string, any>) => ({
                     id: item.id,
                     category: item.category,
                     description: item.description,
