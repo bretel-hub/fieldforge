@@ -10,9 +10,11 @@ export async function GET(request: NextRequest) {
     if (status && status !== 'all') {
       query = query.eq('status', status)
     }
-    if (jobId) {
-      // Prefer job_id lookup (stable UUID) with fallback to job_reference text match
-      query = query.or(`job_id.eq.${jobId},job_reference.eq.${jobRef || ''}`)
+    if (jobId && jobRef) {
+      // Match by job_id (stable ID) OR job_reference (human-readable)
+      query = query.or(`job_id.eq.${jobId},job_reference.eq.${jobRef}`)
+    } else if (jobId) {
+      query = query.eq('job_id', jobId)
     } else if (jobRef) {
       query = query.eq('job_reference', jobRef)
     }

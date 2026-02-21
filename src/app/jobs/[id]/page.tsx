@@ -171,6 +171,15 @@ export default function JobDetailPage() {
     }))
 
     setSavedPhotos([...localPhotos, ...cloudOnly])
+
+    // Cache cloud-only photos to IndexedDB for offline access on this device
+    for (const photo of cloudOnly) {
+      try {
+        await offlineStorage.savePhoto(photo)
+      } catch (err) {
+        console.error('Failed to cache cloud photo locally', err)
+      }
+    }
   }
 
   const loadNotes = async () => {
@@ -179,11 +188,27 @@ export default function JobDetailPage() {
       const data = await res.json()
       if (data.success && data.notes) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setCloudNotes(data.notes.map((n: any) => ({
+        const notes = data.notes.map((n: any) => ({
           id: n.id,
           text: n.text,
           timestamp: n.timestamp,
-        })))
+        }))
+        setCloudNotes(notes)
+
+        // Cache cloud notes to IndexedDB for offline access on this device
+        try {
+          const storedJob = await offlineStorage.getJob(jobId)
+          if (storedJob) {
+            const localIds = new Set((storedJob.noteEntries ?? []).map(n => n.id))
+            const cloudOnly = notes.filter((n: { id: string }) => !localIds.has(n.id))
+            if (cloudOnly.length > 0) {
+              const merged = [...(storedJob.noteEntries ?? []), ...cloudOnly]
+              await offlineStorage.saveJob({ ...storedJob, noteEntries: merged })
+            }
+          }
+        } catch (err) {
+          console.error('Failed to cache cloud notes locally', err)
+        }
       }
     } catch (err) {
       console.error('Failed to load cloud notes', err)
@@ -194,13 +219,54 @@ export default function JobDetailPage() {
     if (!currentJobId && !jobRef) return
     setReceiptsLoading(true)
     try {
-      const params = new URLSearchParams()
-      if (currentJobId) params.set('jobId', currentJobId)
-      if (jobRef) params.set('jobRef', jobRef)
-      const res = await fetch(`/api/receipts?${params.toString()}`)
-      const data = await res.json()
-      if (data.success) {
-        setReceipts(data.receipts)
+      // Load local receipts from IndexedDB (offline / persistence fallback)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let localReceipts: any[] = []
+      try {
+        const storedJob = await offlineStorage.getJob(currentJobId)
+        if (storedJob?.receipts) {
+          localReceipts = storedJob.receipts
+        }
+      } catch (err) {
+        console.error('Failed to load local receipts', err)
+      }
+
+      // Load cloud receipts from Supabase (cross-device sync)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let cloudReceipts: any[] = []
+      try {
+        const params = new URLSearchParams()
+        if (currentJobId) params.set('jobId', currentJobId)
+        if (jobRef) params.set('jobRef', jobRef)
+        const res = await fetch(`/api/receipts?${params.toString()}`)
+        const data = await res.json()
+        if (data.success) {
+          cloudReceipts = data.receipts
+        }
+      } catch (err) {
+        console.error('Failed to load cloud receipts', err)
+      }
+
+      // Merge: cloud takes precedence, then local-only receipts
+      const seen = new Set<string>()
+      const merged = [...cloudReceipts, ...localReceipts].filter(r => {
+        if (seen.has(r.id)) return false
+        seen.add(r.id)
+        return true
+      })
+
+      setReceipts(merged)
+
+      // Update local cache with merged results for offline access
+      if (merged.length > 0) {
+        try {
+          const storedJob = await offlineStorage.getJob(currentJobId)
+          if (storedJob) {
+            await offlineStorage.saveJob({ ...storedJob, receipts: merged })
+          }
+        } catch (err) {
+          console.error('Failed to update local receipt cache', err)
+        }
       }
     } catch (err) {
       console.error('Failed to load receipts', err)
@@ -437,7 +503,7 @@ export default function JobDetailPage() {
           newReceipt = data.receipt
         }
       } catch {
-        // API unavailable — receipt will still appear locally
+        // API unavailable — receipt will still be saved locally
       }
 
       // Build a local receipt with the table's expected field names when the API didn't return one
@@ -457,7 +523,20 @@ export default function JobDetailPage() {
         }
       }
 
-      // Always add the receipt to the table, open the section, and close the form
+      // Save to IndexedDB for local persistence (survives navigation & offline)
+      try {
+        const currentJob = await offlineStorage.getJob(jobId)
+        if (currentJob) {
+          const updatedReceipts = [newReceipt, ...(currentJob.receipts ?? [])]
+          const updatedJob = { ...currentJob, receipts: updatedReceipts, syncStatus: 'pending' as const }
+          await offlineStorage.saveJob(updatedJob)
+          setJob({ ...updatedJob, lastModified: Date.now() })
+        }
+      } catch (err) {
+        console.error('Failed to save receipt locally', err)
+      }
+
+      // Update UI state
       setReceipts(prev => [newReceipt, ...prev])
       setReceiptsOpen(true)
       setShowReceiptForm(false)

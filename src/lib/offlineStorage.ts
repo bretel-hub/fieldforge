@@ -52,6 +52,19 @@ export interface StoredJob {
     text: string
     timestamp: string
   }>
+  receipts?: Array<{
+    id: string
+    vendor_name: string
+    total: number
+    category?: string | null
+    notes?: string | null
+    media_url?: string | null
+    created_at: string
+    source?: string
+    status?: string
+    job_reference?: string | null
+    job_id?: string | null
+  }>
   photos?: string[]
   syncStatus: 'synced' | 'pending' | 'failed'
   lastModified: number

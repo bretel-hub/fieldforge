@@ -125,7 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_partner_costs_partner_id ON partner_costs(partner
 CREATE TABLE IF NOT EXISTS receipts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   job_reference TEXT,
-  job_id UUID,
+  job_id TEXT,
   proposal_id UUID REFERENCES proposals(id) ON DELETE SET NULL,
   vendor_name TEXT NOT NULL,
   category TEXT,
