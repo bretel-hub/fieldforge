@@ -7,7 +7,7 @@ import { PhotoCaptureComponent } from '@/components/PhotoCapture'
 import {
   Camera, MapPin, User, Loader2, ArrowLeft,
   DollarSign, CheckCircle2, AlertCircle, Save,
-  Mail, Phone, Building2, ChevronDown, ChevronUp,
+  Mail, Phone, ChevronDown, ChevronUp,
   StickyNote, Plus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -294,13 +294,6 @@ export default function JobDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <Building2 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Name</p>
-                  <p className="text-gray-900 font-semibold">{job.customerName || '—'}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
                 <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Contact</p>
@@ -340,49 +333,40 @@ export default function JobDetailPage() {
           </div>
         </div>
 
-        {/* ── Job Title & Description ── */}
+        {/* ── Project Details ── */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="mb-4">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Job Title</p>
-            <h2 className="text-lg font-semibold text-gray-900">{job.title}</h2>
-          </div>
-          {job.description && (
-            <div>
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-2">Description / Scope of Work</p>
-              <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{job.description}</p>
-            </div>
-          )}
-
-          {/* Project Details */}
-          {(job.estimatedCompletion || job.technicianName) && (
-            <div className="pt-5 mt-5 border-t border-gray-100">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Project Details</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                <div className="space-y-4">
-                  {job.estimatedCompletion && (
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Est. Completion</p>
-                        <p className="text-gray-900">{formatDate(job.estimatedCompletion)}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  {job.technicianName && (
-                    <div className="flex items-start gap-3">
-                      <User className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Assigned To</p>
-                        <p className="text-gray-900">{job.technicianName}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+          <h2 className="text-base font-semibold text-gray-900 mb-5 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-gray-400" />
+            Project Details
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Job Title</p>
+                <p className="text-gray-900 font-semibold">{job.title}</p>
               </div>
+              {job.description && (
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Description / Scope of Work</p>
+                  <p className="text-gray-700 whitespace-pre-line leading-relaxed">{job.description}</p>
+                </div>
+              )}
             </div>
-          )}
+            <div className="space-y-4">
+              {job.estimatedCompletion && (
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Est. Completion</p>
+                  <p className="text-gray-900">{formatDate(job.estimatedCompletion)}</p>
+                </div>
+              )}
+              {job.technicianName && (
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Assigned To</p>
+                  <p className="text-gray-900">{job.technicianName}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Proposal Items (collapsible) ── */}

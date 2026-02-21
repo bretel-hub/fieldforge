@@ -141,7 +141,7 @@ export function JobsTable() {
 
     return filteredJobs.map((job) => {
       const jobCode      = job.jobNumber ?? job.id
-      const customerName = job.customerName || 'Unassigned customer'
+      const customerName = job.customerContact || job.customerName || 'Unassigned customer'
       const locationLabel = job.location?.label ?? job.location?.address ?? 'No location'
       const photosCount  = job.photosCount ?? job.photos?.length ?? 0
       const lastUpdate   = job.lastUpdateNote ?? 'No updates yet'
