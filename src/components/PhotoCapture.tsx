@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Camera, SwitchCamera, X, Check, MapPin, Loader2, AlertTriangle } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Camera, SwitchCamera, X, Check, MapPin, Loader2, AlertTriangle, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CameraService, type PhotoCapture } from '@/lib/cameraService'
 import { offlineStorage } from '@/lib/offlineStorage'
@@ -15,14 +15,15 @@ interface PhotoCaptureProps {
   defaultFacingMode?: 'user' | 'environment'
 }
 
-export function PhotoCaptureComponent({ 
-  onPhotoCapture, 
-  onClose, 
-  jobId, 
+export function PhotoCaptureComponent({
+  onPhotoCapture,
+  onClose,
+  jobId,
   taskId,
   defaultFacingMode = 'environment'
 }: PhotoCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [cameraService] = useState(() => new CameraService())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -31,6 +32,7 @@ export function PhotoCaptureComponent({
   const [permissions, setPermissions] = useState({ camera: false, location: false })
   const [locationStatus, setLocationStatus] = useState<'checking' | 'granted' | 'denied' | 'unavailable'>('checking')
   const [isSaving, setIsSaving] = useState(false)
+  const [useNativeCamera, setUseNativeCamera] = useState(false)
 
   useEffect(() => {
     startCamera()
@@ -39,17 +41,116 @@ export function PhotoCaptureComponent({
     }
   }, [])
 
+  // Handle file input change (native camera / gallery pick)
+  const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setIsLoading(true)
+
+      // Compress the image on a canvas
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = () => reject(new Error('Failed to read file'))
+        reader.readAsDataURL(file)
+      })
+
+      // Resize / compress via canvas
+      const img = new window.Image()
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject(new Error('Failed to load image'))
+        img.src = dataUrl
+      })
+
+      const maxWidth = 1920
+      const maxHeight = 1080
+      let { width, height } = { width: img.width, height: img.height }
+
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = width / height
+        if (width > height) {
+          width = maxWidth
+          height = maxWidth / ratio
+        } else {
+          height = maxHeight
+          width = maxHeight * ratio
+        }
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0, width, height)
+
+      const quality = 0.85
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', quality)
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (b) => (b ? resolve(b) : reject(new Error('Blob conversion failed'))),
+          'image/jpeg',
+          quality
+        )
+      })
+
+      // Try to get GPS location
+      let location: GeolocationPosition | undefined
+      if ('geolocation' in navigator) {
+        try {
+          location = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 5000,
+              maximumAge: 300000,
+            })
+          })
+        } catch {
+          // GPS not available — continue without it
+        }
+      }
+
+      const timestamp = new Date()
+      const photo: PhotoCapture = {
+        id: crypto.randomUUID(),
+        blob,
+        dataUrl: compressedDataUrl,
+        timestamp,
+        location,
+        jobId,
+        taskId,
+        fileName: `fieldforge-${timestamp.getTime()}.jpg`,
+        mimeType: 'image/jpeg',
+        size: blob.size,
+      }
+
+      setCapturedPhoto(photo)
+      setIsLoading(false)
+    } catch (err) {
+      console.error('File capture error:', err)
+      setError('Failed to process photo')
+      setIsLoading(false)
+    }
+
+    // Reset input so the same file can be selected again
+    e.target.value = ''
+  }, [jobId, taskId])
+
   const startCamera = async () => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       // Check permissions
       const perms = await cameraService.requestPermissions()
       setPermissions(perms)
-      
+
       if (!perms.camera) {
-        setError('Camera permission required. Please allow camera access and reload.')
+        // Fall back to native file input on mobile
+        setUseNativeCamera(true)
+        setIsLoading(false)
         return
       }
 
@@ -64,7 +165,7 @@ export function PhotoCaptureComponent({
 
       // Start camera
       const stream = await cameraService.startCamera(currentFacingMode)
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         videoRef.current.onloadedmetadata = () => {
@@ -74,7 +175,8 @@ export function PhotoCaptureComponent({
       }
     } catch (err) {
       console.error('Camera error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to access camera')
+      // Fall back to native file input instead of showing error
+      setUseNativeCamera(true)
       setIsLoading(false)
     }
   }
@@ -229,9 +331,22 @@ export function PhotoCaptureComponent({
     }
   }
 
-  if (error) {
+  // Open native file picker for camera
+  const openNativeCamera = () => {
+    fileInputRef.current?.click()
+  }
+
+  if (error && !useNativeCamera) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFileInput}
+        />
         <div className="text-center text-white p-8 max-w-md">
           <AlertTriangle className="h-16 w-16 mx-auto mb-4 text-red-500" />
           <h2 className="text-xl font-bold mb-2">Camera Error</h2>
@@ -239,6 +354,10 @@ export function PhotoCaptureComponent({
           <div className="space-y-2">
             <Button onClick={startCamera} variant="outline" className="w-full">
               Try Again
+            </Button>
+            <Button onClick={openNativeCamera} variant="outline" className="w-full">
+              <ImagePlus className="h-4 w-4 mr-2" />
+              Use Phone Camera
             </Button>
             <Button onClick={onClose} variant="ghost" className="w-full">
               Close
@@ -249,8 +368,76 @@ export function PhotoCaptureComponent({
     )
   }
 
+  // Native camera fallback mode — full-screen UI with file input
+  if (useNativeCamera && !capturedPhoto) {
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex flex-col">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFileInput}
+        />
+
+        {/* Header */}
+        <div className="bg-black/50 backdrop-blur-sm p-4 flex items-center justify-between">
+          <Button
+            onClick={onClose}
+            size="sm"
+            variant="ghost"
+            className="text-white hover:bg-white/10"
+          >
+            <X className="h-5 w-5 mr-1" />
+            Close
+          </Button>
+          <span className="text-white text-sm font-medium">Take Photo</span>
+          <div className="w-16" />
+        </div>
+
+        {/* Center content */}
+        <div className="flex-1 flex items-center justify-center p-8">
+          {isLoading ? (
+            <div className="text-center text-white">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+              <div>Processing photo...</div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="w-32 h-32 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-8">
+                <Camera className="h-16 w-16 text-white/70" />
+              </div>
+              <Button
+                onClick={openNativeCamera}
+                size="lg"
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg"
+              >
+                <Camera className="h-6 w-6 mr-3" />
+                Open Camera
+              </Button>
+              <p className="text-gray-400 text-sm mt-4">
+                Tap to open your phone&apos;s camera
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="fixed inset-0 bg-black z-50">
+      {/* Hidden file input always available as fallback */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileInput}
+      />
+
       {/* Status Bar */}
       <div className="absolute top-0 left-0 right-0 bg-black/50 backdrop-blur-sm z-10">
         <div className="flex items-center justify-between p-4">
@@ -260,7 +447,7 @@ export function PhotoCaptureComponent({
               {navigator.onLine ? 'Online' : 'Offline'}
             </span>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <MapPin className={`h-4 w-4 ${locationStatus === 'granted' ? 'text-green-500' : 'text-gray-400'}`} />
             <span className="text-white text-sm">

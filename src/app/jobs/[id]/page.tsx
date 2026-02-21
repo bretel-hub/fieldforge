@@ -8,7 +8,7 @@ import {
   Camera, MapPin, User, Loader2, ArrowLeft,
   DollarSign, CheckCircle2, AlertCircle, Save,
   Mail, Phone, ChevronDown, ChevronUp,
-  StickyNote, Plus, Trash2, Pencil, X,
+  StickyNote, Plus, Trash2, Pencil, X, Clock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PhotoCapture } from '@/lib/cameraService'
@@ -657,42 +657,65 @@ export default function JobDetailPage() {
                 <div className="text-center py-14 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
                   <Camera className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p className="text-sm font-medium">No photos yet</p>
-                  <p className="text-xs mt-1">Tap "Add Photo" or use "Take Photo" to document work</p>
+                  <p className="text-xs mt-1">Tap &quot;Add Photo&quot; or use &quot;Take Photo&quot; to document work</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {savedPhotos.map((photo) => (
-                    <div
-                      key={photo.id}
-                      className="relative group rounded-lg overflow-hidden bg-gray-100"
-                      style={{ aspectRatio: '1' }}
-                    >
-                      {photo.dataUrl ? (
-                        <img
-                          src={photo.dataUrl}
-                          alt={photo.fileName}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Camera className="h-8 w-8 text-gray-300" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all">
-                        <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <p className="text-white text-xs truncate">
-                            {new Date(photo.capturedAt).toLocaleString()}
-                          </p>
-                          {photo.location && (
-                            <div className="flex items-center text-white/80 text-xs mt-0.5">
-                              <MapPin className="h-2.5 w-2.5 mr-0.5" />
-                              GPS
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[...savedPhotos]
+                    .sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime())
+                    .map((photo) => {
+                      const capturedDate = new Date(photo.capturedAt)
+                      return (
+                        <div
+                          key={photo.id}
+                          className="rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shadow-sm"
+                        >
+                          {/* Photo image */}
+                          <div className="relative" style={{ aspectRatio: '4/3' }}>
+                            {photo.dataUrl ? (
+                              <img
+                                src={photo.dataUrl}
+                                alt={photo.fileName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                <Camera className="h-8 w-8 text-gray-300" />
+                              </div>
+                            )}
+                            {/* GPS badge */}
+                            {photo.location && (
+                              <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
+                                <MapPin className="h-3 w-3" />
+                                GPS
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Date & time info bar */}
+                          <div className="px-3 py-2.5 bg-white">
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                              <Clock className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                              <span className="font-medium">
+                                {capturedDate.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                })}
+                              </span>
+                              <span className="text-gray-400">at</span>
+                              <span>
+                                {capturedDate.toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                  second: '2-digit',
+                                })}
+                              </span>
                             </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      )
+                    })}
                 </div>
               )}
             </div>
