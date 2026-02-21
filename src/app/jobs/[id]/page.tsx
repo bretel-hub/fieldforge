@@ -92,9 +92,9 @@ export default function JobDetailPage() {
   const [itemsOpen, setItemsOpen] = useState(false)
 
   // Collapsible sections
-  const [photosOpen, setPhotosOpen] = useState(true)
-  const [notesOpen, setNotesOpen] = useState(true)
-  const [receiptsOpen, setReceiptsOpen] = useState(true)
+  const [photosOpen, setPhotosOpen] = useState(false)
+  const [notesOpen, setNotesOpen] = useState(false)
+  const [receiptsOpen, setReceiptsOpen] = useState(false)
 
   // Notes section
   const [newNote, setNewNote] = useState('')
