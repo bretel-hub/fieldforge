@@ -9,7 +9,7 @@ import {
   DollarSign, CheckCircle2, AlertCircle, Save,
   Mail, Phone, ChevronDown, ChevronUp,
   StickyNote, Plus, Trash2, Pencil, X, Clock, Check,
-  Receipt, UploadCloud,
+  Receipt,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PhotoCapture } from '@/lib/cameraService'
@@ -127,6 +127,7 @@ export default function JobDetailPage() {
   const [receiptSubmitting, setReceiptSubmitting] = useState(false)
   const [expandedReceiptId, setExpandedReceiptId] = useState<string | null>(null)
   const receiptPhotoRef = useRef<HTMLInputElement>(null)
+  const [expandedReceiptId, setExpandedReceiptId] = useState<string | null>(null)
 
   const loadPhotos = async () => {
     const photos = await offlineStorage.getPhotosByJob(jobId)
@@ -331,6 +332,7 @@ export default function JobDetailPage() {
         jobId: null,
         notes: receiptForm.notes || null,
         status: 'assigned',
+        mediaUrl: receiptPhoto?.preview || null,
       }
 
       const res = await fetch('/api/receipts', {
@@ -900,154 +902,105 @@ export default function JobDetailPage() {
                   {receipts.length}
                 </span>
               )}
-            </span>
-            {receiptsOpen
-              ? <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
-              : <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
-            }
-          </button>
+            </h2>
+            {!showReceiptForm && (
+              <Button
+                onClick={() => {
+                  setReceiptForm(prev => ({ ...prev, projectId: job.id }))
+                  setShowReceiptForm(true)
+                }}
+                size="sm"
+                variant="outline"
+                className="text-green-700 border-green-300 hover:bg-green-50"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                Add Receipt
+              </Button>
+            )}
+          </div>
 
-          {receiptsOpen && (
-            <div className="border-t border-gray-100">
-              {!showReceiptForm && (
-                <div className="flex items-center justify-end px-6 py-3">
-                  <Button
-                    onClick={() => {
-                      setReceiptForm(prev => ({ ...prev, projectId: job.id }))
-                      setShowReceiptForm(true)
-                    }}
-                    size="sm"
-                    variant="outline"
-                    className="text-green-700 border-green-300 hover:bg-green-50"
-                  >
-                    <UploadCloud className="h-3.5 w-3.5 mr-1.5" />
-                    Upload Photo
-                  </Button>
-                </div>
-              )}
-
-              <div className="px-6 pb-6">
-            {/* Add Receipt Form */}
-            {showReceiptForm && (
-              <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-5">
-                {/* Photo upload area */}
-                <div className="mb-4">
-                  <input
-                    ref={receiptPhotoRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    onChange={handleReceiptPhotoChange}
-                  />
-                  {receiptPhoto ? (
-                    <div className="relative">
-                      <img
-                        src={receiptPhoto.preview}
-                        alt="Receipt preview"
-                        className="w-full max-h-48 object-contain rounded-lg border border-gray-200"
-                      />
-                      <button
-                        onClick={() => {
-                          setReceiptPhoto(null)
-                          if (receiptPhotoRef.current) receiptPhotoRef.current.value = ''
-                        }}
-                        className="absolute top-2 right-2 rounded-full bg-white/90 border border-gray-300 p-1 hover:bg-gray-100"
-                      >
-                        <X className="h-3.5 w-3.5 text-gray-600" />
-                      </button>
-                    </div>
-                  ) : (
+          {/* Add Receipt Form */}
+          {showReceiptForm && (
+            <div className="border-b border-gray-200 bg-gray-50 p-5">
+              {/* Photo upload area */}
+              <div className="mb-4">
+                <input
+                  ref={receiptPhotoRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleReceiptPhotoChange}
+                />
+                {receiptPhoto ? (
+                  <div className="relative">
+                    <img
+                      src={receiptPhoto.preview}
+                      alt="Receipt preview"
+                      className="w-full max-h-48 object-contain rounded-lg border border-gray-200"
+                    />
                     <button
-                      onClick={() => receiptPhotoRef.current?.click()}
-                      className="w-full rounded-lg border-2 border-dashed border-gray-300 bg-white px-4 py-8 text-center hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                      onClick={() => {
+                        setReceiptPhoto(null)
+                        if (receiptPhotoRef.current) receiptPhotoRef.current.value = ''
+                      }}
+                      className="absolute top-2 right-2 rounded-full bg-white/90 border border-gray-300 p-1 hover:bg-gray-100"
                     >
-                      <Camera className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                      <p className="text-sm font-medium text-gray-600">Take photo or upload receipt image</p>
-                      <p className="text-xs text-gray-400 mt-1">Tap to open camera or select a file</p>
+                      <X className="h-3.5 w-3.5 text-gray-600" />
                     </button>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => receiptPhotoRef.current?.click()}
+                    className="w-full rounded-lg border-2 border-dashed border-gray-300 bg-white px-4 py-6 text-center hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                  >
+                    <Camera className="h-7 w-7 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm font-medium text-gray-600">Take photo or upload receipt image</p>
+                    <p className="text-xs text-gray-400 mt-1">Tap to open camera or select a file</p>
+                  </button>
+                )}
+              </div>
 
-                {/* Form fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Vendor</label>
+              {/* Form fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Vendor</label>
+                  <input
+                    type="text"
+                    value={receiptForm.vendorName}
+                    onChange={(e) => setReceiptForm(prev => ({ ...prev, vendorName: e.target.value }))}
+                    placeholder="e.g. Home Depot"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Cost</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
                     <input
-                      type="text"
-                      value={receiptForm.vendorName}
-                      onChange={(e) => setReceiptForm(prev => ({ ...prev, vendorName: e.target.value }))}
-                      placeholder="e.g. Home Depot"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Amount</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={receiptForm.total}
-                        onChange={(e) => setReceiptForm(prev => ({ ...prev, total: e.target.value }))}
-                        placeholder="0.00"
-                        className="w-full rounded-lg border border-gray-300 pl-7 pr-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Category</label>
-                    <select
-                      value={receiptForm.category}
-                      onChange={(e) => setReceiptForm(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">— Select a category —</option>
-                      {RECEIPT_CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Notes</label>
-                    <textarea
-                      value={receiptForm.notes}
-                      onChange={(e) => setReceiptForm(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Additional details..."
-                      rows={2}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      type="number"
+                      step="0.01"
+                      value={receiptForm.total}
+                      onChange={(e) => setReceiptForm(prev => ({ ...prev, total: e.target.value }))}
+                      placeholder="0.00"
+                      className="w-full rounded-lg border border-gray-300 pl-7 pr-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
-
-                {/* Form buttons */}
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    onClick={() => {
-                      setShowReceiptForm(false)
-                      setReceiptPhoto(null)
-                      if (receiptPhotoRef.current) receiptPhotoRef.current.value = ''
-                    }}
-                    size="sm"
-                    variant="outline"
-                    className="text-gray-600 border-gray-300 hover:bg-gray-100"
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Category</label>
+                  <select
+                    value={receiptForm.category}
+                    onChange={(e) => setReceiptForm(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateReceipt}
-                    disabled={receiptSubmitting || !receiptForm.vendorName || !receiptForm.total}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {receiptSubmitting
-                      ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Saving…</>
-                      : <><Plus className="h-3.5 w-3.5 mr-1.5" />Save Receipt</>
-                    }
-                  </Button>
+                    <option value="">— Select —</option>
+                    {RECEIPT_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            )}
 
             {/* Receipts table — always visible */}
             {receiptsLoading ? (
@@ -1141,7 +1094,7 @@ export default function JobDetailPage() {
             )}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* ── Actions ── */}
