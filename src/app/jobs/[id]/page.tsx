@@ -8,7 +8,7 @@ import {
   Camera, MapPin, User, Loader2, ArrowLeft,
   DollarSign, CheckCircle2, AlertCircle, Save,
   Mail, Phone, ChevronDown, ChevronUp,
-  StickyNote, Plus, Trash2, Pencil, X, Clock,
+  StickyNote, Plus, Trash2, Pencil, X, Clock, Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PhotoCapture } from '@/lib/cameraService'
@@ -101,6 +101,12 @@ export default function JobDetailPage() {
   const [editTechnician, setEditTechnician] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  // Photo selection & deletion
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set())
+  const [showPhotoDeleteConfirm, setShowPhotoDeleteConfirm] = useState(false)
+  const [deletingPhotos, setDeletingPhotos] = useState(false)
 
   const loadPhotos = async () => {
     const photos = await offlineStorage.getPhotosByJob(jobId)
@@ -216,6 +222,49 @@ export default function JobDetailPage() {
       console.error('Failed to save note', err)
     } finally {
       setNoteSaving(false)
+    }
+  }
+
+  const togglePhotoSelection = (photoId: string) => {
+    setSelectedPhotoIds(prev => {
+      const next = new Set(prev)
+      if (next.has(photoId)) {
+        next.delete(photoId)
+      } else {
+        next.add(photoId)
+      }
+      return next
+    })
+  }
+
+  const handleSelectAllPhotos = () => {
+    if (selectedPhotoIds.size === savedPhotos.length) {
+      setSelectedPhotoIds(new Set())
+    } else {
+      setSelectedPhotoIds(new Set(savedPhotos.map(p => p.id)))
+    }
+  }
+
+  const handleExitSelectMode = () => {
+    setSelectMode(false)
+    setSelectedPhotoIds(new Set())
+  }
+
+  const handleDeleteSelectedPhotos = async () => {
+    if (selectedPhotoIds.size === 0) return
+    setDeletingPhotos(true)
+    try {
+      await Promise.all(
+        Array.from(selectedPhotoIds).map(id => offlineStorage.deletePhoto(id))
+      )
+      await loadPhotos()
+      setSelectedPhotoIds(new Set())
+      setSelectMode(false)
+      setShowPhotoDeleteConfirm(false)
+    } catch (err) {
+      console.error('Failed to delete photos', err)
+    } finally {
+      setDeletingPhotos(false)
     }
   }
 
@@ -584,16 +633,40 @@ export default function JobDetailPage() {
             </button>
 
             {logTab === 'photos' && (
-              <div className="ml-auto pr-5">
-                <Button
-                  onClick={() => setShowCamera(true)}
-                  size="sm"
-                  variant="outline"
-                  className="text-green-700 border-green-300 hover:bg-green-50"
-                >
-                  <Camera className="h-3.5 w-3.5 mr-1.5" />
-                  Add Photo
-                </Button>
+              <div className="ml-auto pr-5 flex items-center gap-2">
+                {savedPhotos.length > 0 && !selectMode && (
+                  <Button
+                    onClick={() => setSelectMode(true)}
+                    size="sm"
+                    variant="outline"
+                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1.5" />
+                    Select
+                  </Button>
+                )}
+                {selectMode && (
+                  <Button
+                    onClick={handleExitSelectMode}
+                    size="sm"
+                    variant="outline"
+                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                  >
+                    <X className="h-3.5 w-3.5 mr-1.5" />
+                    Cancel
+                  </Button>
+                )}
+                {!selectMode && (
+                  <Button
+                    onClick={() => setShowCamera(true)}
+                    size="sm"
+                    variant="outline"
+                    className="text-green-700 border-green-300 hover:bg-green-50"
+                  >
+                    <Camera className="h-3.5 w-3.5 mr-1.5" />
+                    Add Photo
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -653,6 +726,32 @@ export default function JobDetailPage() {
           {/* Photos tab */}
           {logTab === 'photos' && (
             <div className="p-6">
+              {/* Selection toolbar */}
+              {selectMode && savedPhotos.length > 0 && (
+                <div className="flex items-center justify-between mb-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleSelectAllPhotos}
+                      className="text-sm font-medium text-blue-700 hover:text-blue-800"
+                    >
+                      {selectedPhotoIds.size === savedPhotos.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                    <span className="text-sm text-blue-600">
+                      {selectedPhotoIds.size} of {savedPhotos.length} selected
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => setShowPhotoDeleteConfirm(true)}
+                    disabled={selectedPhotoIds.size === 0}
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                    Delete{selectedPhotoIds.size > 0 ? ` (${selectedPhotoIds.size})` : ''}
+                  </Button>
+                </div>
+              )}
+
               {savedPhotos.length === 0 ? (
                 <div className="text-center py-14 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
                   <Camera className="h-12 w-12 mx-auto mb-3 opacity-30" />
@@ -665,10 +764,18 @@ export default function JobDetailPage() {
                     .sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime())
                     .map((photo) => {
                       const capturedDate = new Date(photo.capturedAt)
+                      const isSelected = selectedPhotoIds.has(photo.id)
                       return (
                         <div
                           key={photo.id}
-                          className="rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shadow-sm"
+                          onClick={selectMode ? () => togglePhotoSelection(photo.id) : undefined}
+                          className={`rounded-lg overflow-hidden bg-gray-100 border-2 shadow-sm transition-all ${
+                            selectMode ? 'cursor-pointer' : ''
+                          } ${
+                            isSelected
+                              ? 'border-blue-500 ring-2 ring-blue-200'
+                              : 'border-gray-200'
+                          }`}
                         >
                           {/* Photo image */}
                           <div className="relative" style={{ aspectRatio: '4/3' }}>
@@ -683,12 +790,30 @@ export default function JobDetailPage() {
                                 <Camera className="h-8 w-8 text-gray-300" />
                               </div>
                             )}
+                            {/* Selection checkbox */}
+                            {selectMode && (
+                              <div className="absolute top-2 left-2">
+                                <div
+                                  className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    isSelected
+                                      ? 'bg-blue-600 border-blue-600'
+                                      : 'bg-white/80 border-gray-300 backdrop-blur-sm'
+                                  }`}
+                                >
+                                  {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
+                                </div>
+                              </div>
+                            )}
                             {/* GPS badge */}
                             {photo.location && (
                               <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
                                 <MapPin className="h-3 w-3" />
                                 GPS
                               </div>
+                            )}
+                            {/* Selected overlay */}
+                            {isSelected && (
+                              <div className="absolute inset-0 bg-blue-500/10" />
                             )}
                           </div>
 
@@ -791,6 +916,39 @@ export default function JobDetailPage() {
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Delete Confirmation Modal */}
+      {showPhotoDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowPhotoDeleteConfirm(false)} />
+          <div className="relative z-10 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h2 className="text-base font-semibold text-gray-900">Delete Photos</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete {selectedPhotoIds.size} photo{selectedPhotoIds.size !== 1 ? 's' : ''}? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowPhotoDeleteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteSelectedPhotos}
+                disabled={deletingPhotos}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deletingPhotos ? 'Deleting...' : `Yes, Delete${selectedPhotoIds.size > 1 ? ` (${selectedPhotoIds.size})` : ''}`}
               </button>
             </div>
           </div>
