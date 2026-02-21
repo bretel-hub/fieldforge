@@ -71,7 +71,6 @@ export async function PATCH(
         project_title: projectDetails.title,
         project_description: projectDetails.description,
         project_location: projectDetails.location,
-        project_timeline: projectDetails.timeline,
         status: status || 'draft',
         subtotal,
         tax_amount: tax,

@@ -30,7 +30,6 @@ interface FullProposal {
   project_title: string
   project_description: string
   project_location: string
-  project_timeline: string
   subtotal: number
   tax_amount: number
   total: number
@@ -135,7 +134,6 @@ export function ProposalsTable() {
 
           let projectDescription = ''
           let projectLocation = proposal.customer_address
-          let projectTimeline = ''
           let customerContact = proposal.customer_contact || ''
           let customerEmail = proposal.customer_email || ''
           let customerAddress = proposal.customer_address || ''
@@ -149,7 +147,6 @@ export function ProposalsTable() {
               const fp = fullData.proposal
               projectDescription = fp.project_description || ''
               projectLocation = fp.project_location || proposal.customer_address
-              projectTimeline = fp.project_timeline || ''
               customerContact = fp.customer_contact || customerContact
               customerEmail = fp.customer_email || customerEmail
               customerAddress = fp.customer_address || customerAddress
@@ -183,7 +180,6 @@ export function ProposalsTable() {
             value: proposal.total,
             location: { address: projectLocation },
             description: projectDescription,
-            projectTimeline: projectTimeline || undefined,
             projectLocation: projectLocation || undefined,
             lineItems: lineItems.length > 0 ? lineItems : undefined,
             subtotal,
@@ -468,7 +464,6 @@ export function ProposalsTable() {
             title: previewProposal.project_title,
             description: previewProposal.project_description,
             location: previewProposal.project_location,
-            timeline: previewProposal.project_timeline,
           }}
           items={previewProposal.items.map((item) => ({
             id: item.id,

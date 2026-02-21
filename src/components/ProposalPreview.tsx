@@ -24,7 +24,6 @@ interface ProposalPreviewProps {
     title: string
     description: string
     location: string
-    timeline: string
   }
   items: LineItem[]
   subtotal: number
@@ -201,9 +200,6 @@ export function ProposalPreview({
                 <div className="text-sm font-semibold text-blue-700">{proposalNumber}</div>
               )}
               <div className="text-sm text-gray-500">Date: {today}</div>
-              {projectDetails.timeline && (
-                <div className="text-sm text-gray-500">Timeline: {projectDetails.timeline}</div>
-              )}
             </div>
           </div>
 
