@@ -94,7 +94,7 @@ export default function JobDetailPage() {
   // Collapsible sections
   const [photosOpen, setPhotosOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
-  const [receiptsOpen, setReceiptsOpen] = useState(false)
+  const [receiptsOpen, setReceiptsOpen] = useState(true)
 
   // Notes section
   const [newNote, setNewNote] = useState('')
@@ -1049,19 +1049,13 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {/* Receipts table */}
+            {/* Receipts table — always visible */}
             {receiptsLoading ? (
               <div className="flex items-center justify-center py-8 text-gray-400">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
                 Loading receipts…
               </div>
-            ) : receipts.length === 0 && !showReceiptForm ? (
-              <div className="text-center py-14 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
-                <Receipt className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-medium">No receipts yet</p>
-                <p className="text-xs mt-1">Upload a photo or email a receipt to track expenses</p>
-              </div>
-            ) : receipts.length > 0 ? (
+            ) : (
               <div className="overflow-hidden rounded-lg border border-gray-200">
                 <table className="w-full text-sm">
                   <thead>
@@ -1072,70 +1066,79 @@ export default function JobDetailPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {receipts.map(receipt => (
-                      <React.Fragment key={receipt.id}>
-                        <tr
-                          onClick={() => setExpandedReceiptId(prev => prev === receipt.id ? null : receipt.id)}
-                          className="cursor-pointer hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-4 py-3 font-medium text-gray-900 truncate max-w-[180px]">{receipt.vendor_name}</td>
-                          <td className="px-4 py-3">
-                            {receipt.category ? (
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[receipt.category] ?? CATEGORY_COLORS['Other']}`}>
-                                {receipt.category}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">—</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right font-semibold text-gray-900 whitespace-nowrap">{formatCurrency(receipt.total)}</td>
-                        </tr>
-                        {expandedReceiptId === receipt.id && (
-                          <tr>
-                            <td colSpan={3} className="bg-gray-50 px-4 py-4">
-                              <div className="space-y-3">
-                                {receipt.media_url && (
-                                  <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Photo</p>
-                                    <img
-                                      src={receipt.media_url}
-                                      alt={`Receipt from ${receipt.vendor_name}`}
-                                      className="max-h-48 rounded-lg border border-gray-200 object-contain"
-                                    />
-                                  </div>
-                                )}
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Vendor</p>
-                                    <p className="text-sm text-gray-900 mt-0.5">{receipt.vendor_name}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Category</p>
-                                    <p className="text-sm text-gray-900 mt-0.5">{receipt.category || '—'}</p>
-                                  </div>
-                                </div>
-                                {receipt.notes && (
-                                  <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Notes</p>
-                                    <p className="text-sm text-gray-700 mt-0.5 whitespace-pre-wrap">{receipt.notes}</p>
-                                  </div>
-                                )}
-                                {receipt.created_at && (
-                                  <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date</p>
-                                    <p className="text-sm text-gray-700 mt-0.5">{formatDate(receipt.created_at)}</p>
-                                  </div>
-                                )}
-                              </div>
+                    {receipts.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-8 text-center text-gray-400">
+                          <Receipt className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-sm">No receipts yet</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      receipts.map(receipt => (
+                        <React.Fragment key={receipt.id}>
+                          <tr
+                            onClick={() => setExpandedReceiptId(prev => prev === receipt.id ? null : receipt.id)}
+                            className="cursor-pointer hover:bg-gray-50 transition-colors"
+                          >
+                            <td className="px-4 py-3 font-medium text-gray-900 truncate max-w-[180px]">{receipt.vendor_name}</td>
+                            <td className="px-4 py-3">
+                              {receipt.category ? (
+                                <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[receipt.category] ?? CATEGORY_COLORS['Other']}`}>
+                                  {receipt.category}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">—</span>
+                              )}
                             </td>
+                            <td className="px-4 py-3 text-right font-semibold text-gray-900 whitespace-nowrap">{formatCurrency(receipt.total)}</td>
                           </tr>
-                        )}
-                      </React.Fragment>
-                    ))}
+                          {expandedReceiptId === receipt.id && (
+                            <tr>
+                              <td colSpan={3} className="bg-gray-50 px-4 py-4">
+                                <div className="space-y-3">
+                                  {receipt.media_url && (
+                                    <div>
+                                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Photo</p>
+                                      <img
+                                        src={receipt.media_url}
+                                        alt={`Receipt from ${receipt.vendor_name}`}
+                                        className="max-h-48 rounded-lg border border-gray-200 object-contain"
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Vendor</p>
+                                      <p className="text-sm text-gray-900 mt-0.5">{receipt.vendor_name}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Category</p>
+                                      <p className="text-sm text-gray-900 mt-0.5">{receipt.category || '—'}</p>
+                                    </div>
+                                  </div>
+                                  {receipt.notes && (
+                                    <div>
+                                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Notes</p>
+                                      <p className="text-sm text-gray-700 mt-0.5 whitespace-pre-wrap">{receipt.notes}</p>
+                                    </div>
+                                  )}
+                                  {receipt.created_at && (
+                                    <div>
+                                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date</p>
+                                      <p className="text-sm text-gray-700 mt-0.5">{formatDate(receipt.created_at)}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
-            ) : null}
+            )}
               </div>
             </div>
           )}
