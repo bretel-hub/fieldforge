@@ -96,8 +96,6 @@ export default function JobDetailPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
-  const [editEstCompletion, setEditEstCompletion] = useState('')
-  const [editTechnician, setEditTechnician] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -270,8 +268,6 @@ export default function JobDetailPage() {
     if (!job) return
     setEditTitle(job.title)
     setEditDescription(job.description || '')
-    setEditEstCompletion(job.estimatedCompletion || '')
-    setEditTechnician(job.technicianName || '')
     setIsEditing(true)
   }
 
@@ -287,8 +283,6 @@ export default function JobDetailPage() {
         ...job,
         title: editTitle,
         description: editDescription,
-        estimatedCompletion: editEstCompletion || undefined,
-        technicianName: editTechnician || undefined,
         syncStatus: 'pending',
       }
       await offlineStorage.saveJob(updatedJob)
@@ -367,13 +361,6 @@ export default function JobDetailPage() {
               </p>
               <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
             </div>
-            <Button
-              onClick={() => { setShowCamera(true) }}
-              className="bg-green-600 hover:bg-green-700 shrink-0"
-            >
-              <Camera className="h-4 w-4 mr-2" />
-              Take Photo
-            </Button>
           </div>
 
           {/* Compact status bar */}
@@ -485,35 +472,6 @@ export default function JobDetailPage() {
                   />
                 ) : (
                   <p className="text-gray-700 whitespace-pre-line leading-relaxed">{job.description || '—'}</p>
-                )}
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Est. Completion</p>
-                {isEditing ? (
-                  <input
-                    type="date"
-                    value={editEstCompletion}
-                    onChange={(e) => setEditEstCompletion(e.target.value)}
-                    className="w-full rounded-md border-gray-300 shadow-sm text-sm"
-                  />
-                ) : (
-                  <p className="text-gray-900">{formatDate(job.estimatedCompletion) || '—'}</p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Assigned To</p>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editTechnician}
-                    onChange={(e) => setEditTechnician(e.target.value)}
-                    className="w-full rounded-md border-gray-300 shadow-sm text-sm"
-                    placeholder="Technician name"
-                  />
-                ) : (
-                  <p className="text-gray-900">{job.technicianName || '—'}</p>
                 )}
               </div>
             </div>
@@ -798,13 +756,7 @@ export default function JobDetailPage() {
             </div>
 
             {/* Notes feed */}
-            {noteEntries.length === 0 ? (
-              <div className="text-center py-10 text-gray-400 border-2 border-dashed border-gray-100 rounded-lg">
-                <StickyNote className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm font-medium">No notes yet</p>
-                <p className="text-xs mt-1">Add the first note above</p>
-              </div>
-            ) : (
+            {noteEntries.length > 0 && (
               <div className="space-y-4">
                 {noteEntries.map((entry) => (
                   <div key={entry.id} className="flex gap-3">
