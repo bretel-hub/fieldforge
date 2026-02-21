@@ -22,7 +22,42 @@ async function syncApprovedProposalsToJobs(): Promise<void> {
     for (const proposal of approvedProposals) {
       const jobId = `JOB-${proposal.id}`
       const existingJob = await offlineStorage.getJob(jobId)
-      if (existingJob) continue
+
+      // If job exists, check if customer data needs to be repaired from proposal
+      if (existingJob) {
+        const missingCustomerData =
+          !existingJob.customerName ||
+          !existingJob.customerEmail ||
+          !existingJob.customerAddress ||
+          !existingJob.customerContact
+        if (missingCustomerData) {
+          let customerName = proposal.customer_name || proposal.customer_contact || ''
+          let customerContact = proposal.customer_contact || ''
+          let customerEmail = proposal.customer_email || ''
+          let customerAddress = proposal.customer_address || ''
+          try {
+            const fullRes = await fetch(`/api/proposals/${proposal.id}`)
+            const fullData = await fullRes.json()
+            if (fullData.success && fullData.proposal) {
+              const fp = fullData.proposal
+              customerName = fp.customer_name || fp.customer_contact || customerName
+              customerContact = fp.customer_contact || customerContact
+              customerEmail = fp.customer_email || customerEmail
+              customerAddress = fp.customer_address || customerAddress
+            }
+          } catch {
+            // non-fatal
+          }
+          await offlineStorage.saveJob({
+            ...existingJob,
+            customerName: existingJob.customerName || customerName,
+            customerContact: existingJob.customerContact || customerContact,
+            customerEmail: existingJob.customerEmail || customerEmail,
+            customerAddress: existingJob.customerAddress || customerAddress,
+          })
+        }
+        continue
+      }
 
       let projectDescription = ''
       let projectLocation = proposal.customer_address || ''
