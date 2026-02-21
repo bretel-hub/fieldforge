@@ -9,7 +9,7 @@ import {
   DollarSign, CheckCircle2, AlertCircle, Save,
   Mail, Phone, ChevronDown, ChevronUp,
   StickyNote, Plus, Trash2, Pencil, X, Clock, Check,
-  Receipt, UploadCloud,
+  Receipt,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PhotoCapture } from '@/lib/cameraService'
