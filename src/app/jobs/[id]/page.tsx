@@ -9,7 +9,7 @@ import {
   DollarSign, CheckCircle2, AlertCircle, Save,
   Mail, Phone, ChevronDown, ChevronUp,
   StickyNote, Plus, Trash2, Pencil, X, Clock, Check,
-  Receipt, UploadCloud,
+  Receipt,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PhotoCapture } from '@/lib/cameraService'
@@ -123,6 +123,7 @@ export default function JobDetailPage() {
   const [receiptPhoto, setReceiptPhoto] = useState<{ file: File; preview: string } | null>(null)
   const [receiptSubmitting, setReceiptSubmitting] = useState(false)
   const receiptPhotoRef = useRef<HTMLInputElement>(null)
+  const [expandedReceiptId, setExpandedReceiptId] = useState<string | null>(null)
 
   const loadPhotos = async () => {
     const photos = await offlineStorage.getPhotosByJob(jobId)
@@ -334,6 +335,7 @@ export default function JobDetailPage() {
         jobId: null,
         notes: receiptForm.notes || null,
         status: 'assigned',
+        mediaUrl: receiptPhoto?.preview || null,
       }
 
       const res = await fetch('/api/receipts', {
@@ -879,218 +881,250 @@ export default function JobDetailPage() {
               )}
             </h2>
             {!showReceiptForm && (
-              <div className="flex items-center gap-2">
+              <Button
+                onClick={() => {
+                  setReceiptForm(prev => ({ ...prev, projectId: job.id }))
+                  setShowReceiptForm(true)
+                }}
+                size="sm"
+                variant="outline"
+                className="text-green-700 border-green-300 hover:bg-green-50"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                Add Receipt
+              </Button>
+            )}
+          </div>
+
+          {/* Add Receipt Form */}
+          {showReceiptForm && (
+            <div className="border-b border-gray-200 bg-gray-50 p-5">
+              {/* Photo upload area */}
+              <div className="mb-4">
+                <input
+                  ref={receiptPhotoRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleReceiptPhotoChange}
+                />
+                {receiptPhoto ? (
+                  <div className="relative">
+                    <img
+                      src={receiptPhoto.preview}
+                      alt="Receipt preview"
+                      className="w-full max-h-48 object-contain rounded-lg border border-gray-200"
+                    />
+                    <button
+                      onClick={() => {
+                        setReceiptPhoto(null)
+                        if (receiptPhotoRef.current) receiptPhotoRef.current.value = ''
+                      }}
+                      className="absolute top-2 right-2 rounded-full bg-white/90 border border-gray-300 p-1 hover:bg-gray-100"
+                    >
+                      <X className="h-3.5 w-3.5 text-gray-600" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => receiptPhotoRef.current?.click()}
+                    className="w-full rounded-lg border-2 border-dashed border-gray-300 bg-white px-4 py-6 text-center hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                  >
+                    <Camera className="h-7 w-7 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm font-medium text-gray-600">Take photo or upload receipt image</p>
+                    <p className="text-xs text-gray-400 mt-1">Tap to open camera or select a file</p>
+                  </button>
+                )}
+              </div>
+
+              {/* Form fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Vendor</label>
+                  <input
+                    type="text"
+                    value={receiptForm.vendorName}
+                    onChange={(e) => setReceiptForm(prev => ({ ...prev, vendorName: e.target.value }))}
+                    placeholder="e.g. Home Depot"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Cost</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={receiptForm.total}
+                      onChange={(e) => setReceiptForm(prev => ({ ...prev, total: e.target.value }))}
+                      placeholder="0.00"
+                      className="w-full rounded-lg border border-gray-300 pl-7 pr-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Category</label>
+                  <select
+                    value={receiptForm.category}
+                    onChange={(e) => setReceiptForm(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">— Select —</option>
+                    {RECEIPT_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="mt-4">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Notes</label>
+                <textarea
+                  value={receiptForm.notes}
+                  onChange={(e) => setReceiptForm(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Additional details..."
+                  rows={2}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                />
+              </div>
+
+              {/* Form buttons */}
+              <div className="flex justify-end gap-2 mt-4">
                 <Button
                   onClick={() => {
-                    setReceiptForm(prev => ({ ...prev, projectId: job.id }))
-                    setShowReceiptForm(true)
+                    setShowReceiptForm(false)
+                    setReceiptPhoto(null)
+                    if (receiptPhotoRef.current) receiptPhotoRef.current.value = ''
                   }}
                   size="sm"
                   variant="outline"
-                  className="text-green-700 border-green-300 hover:bg-green-50"
+                  className="text-gray-600 border-gray-300 hover:bg-gray-100"
                 >
-                  <UploadCloud className="h-3.5 w-3.5 mr-1.5" />
-                  Upload Photo
+                  Cancel
                 </Button>
-                <a
-                  href={`mailto:receipts@fieldforge.app?subject=${encodeURIComponent(`Receipt for ${job.jobNumber || job.title}`)}`}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-blue-300 bg-white px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors"
+                <Button
+                  onClick={handleCreateReceipt}
+                  disabled={receiptSubmitting || !receiptForm.vendorName || !receiptForm.total}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
-                  <Mail className="h-3.5 w-3.5" />
-                  Email Receipt
-                </a>
+                  {receiptSubmitting
+                    ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Saving…</>
+                    : <><Plus className="h-3.5 w-3.5 mr-1.5" />Save Receipt</>
+                  }
+                </Button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div className="p-6">
-            {/* Add Receipt Form */}
-            {showReceiptForm && (
-              <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-5">
-                {/* Photo upload area */}
-                <div className="mb-4">
-                  <input
-                    ref={receiptPhotoRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    onChange={handleReceiptPhotoChange}
-                  />
-                  {receiptPhoto ? (
-                    <div className="relative">
-                      <img
-                        src={receiptPhoto.preview}
-                        alt="Receipt preview"
-                        className="w-full max-h-48 object-contain rounded-lg border border-gray-200"
-                      />
-                      <button
-                        onClick={() => {
-                          setReceiptPhoto(null)
-                          if (receiptPhotoRef.current) receiptPhotoRef.current.value = ''
-                        }}
-                        className="absolute top-2 right-2 rounded-full bg-white/90 border border-gray-300 p-1 hover:bg-gray-100"
-                      >
-                        <X className="h-3.5 w-3.5 text-gray-600" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => receiptPhotoRef.current?.click()}
-                      className="w-full rounded-lg border-2 border-dashed border-gray-300 bg-white px-4 py-8 text-center hover:border-gray-400 hover:bg-gray-50 transition-colors"
-                    >
-                      <Camera className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                      <p className="text-sm font-medium text-gray-600">Take photo or upload receipt image</p>
-                      <p className="text-xs text-gray-400 mt-1">Tap to open camera or select a file</p>
-                    </button>
-                  )}
-                </div>
-
-                {/* Form fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Project</label>
-                    <select
-                      value={receiptForm.projectId}
-                      onChange={(e) => setReceiptForm(prev => ({ ...prev, projectId: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">— Select a project —</option>
-                      {allProjects.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.jobNumber ? `${p.jobNumber} – ` : ''}{p.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Vendor</label>
-                    <input
-                      type="text"
-                      value={receiptForm.vendorName}
-                      onChange={(e) => setReceiptForm(prev => ({ ...prev, vendorName: e.target.value }))}
-                      placeholder="e.g. Home Depot"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Amount</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={receiptForm.total}
-                        onChange={(e) => setReceiptForm(prev => ({ ...prev, total: e.target.value }))}
-                        placeholder="0.00"
-                        className="w-full rounded-lg border border-gray-300 pl-7 pr-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Category</label>
-                    <select
-                      value={receiptForm.category}
-                      onChange={(e) => setReceiptForm(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">— Select a category —</option>
-                      {RECEIPT_CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Notes</label>
-                    <textarea
-                      value={receiptForm.notes}
-                      onChange={(e) => setReceiptForm(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Additional details..."
-                      rows={2}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Form buttons */}
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    onClick={() => {
-                      setShowReceiptForm(false)
-                      setReceiptPhoto(null)
-                      if (receiptPhotoRef.current) receiptPhotoRef.current.value = ''
-                    }}
-                    size="sm"
-                    variant="outline"
-                    className="text-gray-600 border-gray-300 hover:bg-gray-100"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateReceipt}
-                    disabled={receiptSubmitting || !receiptForm.vendorName || !receiptForm.total}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {receiptSubmitting
-                      ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Saving…</>
-                      : <><Plus className="h-3.5 w-3.5 mr-1.5" />Save Receipt</>
-                    }
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Receipts list */}
-            {receiptsLoading ? (
-              <div className="flex items-center justify-center py-8 text-gray-400">
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                Loading receipts…
-              </div>
-            ) : receipts.length === 0 && !showReceiptForm ? (
+          {/* Receipts table */}
+          {receiptsLoading ? (
+            <div className="flex items-center justify-center py-8 text-gray-400">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              Loading receipts…
+            </div>
+          ) : receipts.length === 0 && !showReceiptForm ? (
+            <div className="p-6">
               <div className="text-center py-14 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
                 <Receipt className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p className="text-sm font-medium">No receipts yet</p>
-                <p className="text-xs mt-1">Upload a photo or email a receipt to track expenses</p>
+                <p className="text-xs mt-1">Add a receipt to track job expenses</p>
               </div>
-            ) : receipts.length > 0 ? (
-              <div className="space-y-3">
-                {receipts.map(receipt => (
-                  <div
-                    key={receipt.id}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 ${
-                        receipt.source === 'email' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
-                      }`}>
-                        {receipt.source === 'email'
-                          ? <Mail className="h-4 w-4" />
-                          : <Camera className="h-4 w-4" />
-                        }
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{receipt.vendor_name}</p>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                          {receipt.category && (
-                            <span className={`inline-flex px-1.5 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[receipt.category] ?? CATEGORY_COLORS['Other']}`}>
-                              {receipt.category}
-                            </span>
-                          )}
-                          {receipt.created_at && (
-                            <span>{formatDate(receipt.created_at)}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-900 shrink-0 ml-3">
-                      {formatCurrency(receipt.total)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
+            </div>
+          ) : receipts.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Vendor</th>
+                    <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Cost</th>
+                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Category</th>
+                    <th className="px-5 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide w-12"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {receipts.map(receipt => {
+                    const isExpanded = expandedReceiptId === receipt.id
+                    const hasPhoto = !!receipt.media_url
+                    return (
+                      <tr key={receipt.id} className="group">
+                        <td colSpan={4} className="p-0">
+                          <div>
+                            <button
+                              onClick={() => setExpandedReceiptId(isExpanded ? null : receipt.id)}
+                              className="w-full flex items-center hover:bg-gray-50/60 transition-colors text-left"
+                            >
+                              <span className="px-5 py-3 flex-1 min-w-0">
+                                <span className="text-sm font-medium text-gray-900 truncate block">{receipt.vendor_name}</span>
+                                {receipt.notes && (
+                                  <span className="text-xs text-gray-400 truncate block mt-0.5">{receipt.notes}</span>
+                                )}
+                              </span>
+                              <span className="px-5 py-3 text-right whitespace-nowrap">
+                                <span className="text-sm font-semibold text-gray-900">{formatCurrency(receipt.total)}</span>
+                              </span>
+                              <span className="px-5 py-3 whitespace-nowrap">
+                                {receipt.category ? (
+                                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[receipt.category] ?? CATEGORY_COLORS['Other']}`}>
+                                    {receipt.category}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-gray-300">—</span>
+                                )}
+                              </span>
+                              <span className="px-5 py-3 text-center">
+                                {hasPhoto ? (
+                                  isExpanded
+                                    ? <ChevronUp className="h-4 w-4 text-gray-400 inline-block" />
+                                    : <ChevronDown className="h-4 w-4 text-gray-400 inline-block" />
+                                ) : (
+                                  <span className="text-xs text-gray-300">—</span>
+                                )}
+                              </span>
+                            </button>
+
+                            {/* Expanded photo row */}
+                            {isExpanded && hasPhoto && (
+                              <div className="px-5 pb-4 bg-gray-50/50 border-t border-gray-100">
+                                <div className="pt-3">
+                                  <img
+                                    src={receipt.media_url}
+                                    alt={`Receipt from ${receipt.vendor_name}`}
+                                    className="max-w-full max-h-80 rounded-lg border border-gray-200 shadow-sm object-contain"
+                                  />
+                                  <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                                    {receipt.created_at && (
+                                      <span>{formatDate(receipt.created_at)}</span>
+                                    )}
+                                    <span className="capitalize">{receipt.source}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+                {receipts.length > 1 && (
+                  <tfoot className="border-t-2 border-gray-200">
+                    <tr className="bg-gray-50">
+                      <td className="px-5 py-3 text-sm font-semibold text-gray-900">Total</td>
+                      <td className="px-5 py-3 text-right text-sm font-bold text-green-700">
+                        {formatCurrency(receipts.reduce((sum: number, r: any) => sum + (r.total || 0), 0))}
+                      </td>
+                      <td className="px-5 py-3"></td>
+                      <td className="px-5 py-3"></td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+          ) : null}
         </div>
 
         {/* ── Actions ── */}
