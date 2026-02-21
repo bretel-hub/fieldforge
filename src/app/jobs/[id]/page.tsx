@@ -88,8 +88,7 @@ export default function JobDetailPage() {
   // Items section
   const [itemsOpen, setItemsOpen] = useState(false)
 
-  // Log section
-  const [logTab, setLogTab] = useState<'notes' | 'photos'>('notes')
+  // Notes section
   const [newNote, setNewNote] = useState('')
   const [noteSaving, setNoteSaving] = useState(false)
 
@@ -176,7 +175,6 @@ export default function JobDetailPage() {
 
   const handlePhotoCapture = async (_photo: PhotoCapture) => {
     await loadPhotos()
-    setLogTab('photos')
   }
 
   const handleSaveStatus = async () => {
@@ -593,47 +591,32 @@ export default function JobDetailPage() {
           </div>
         )}
 
-        {/* ── Job Log (Notes | Photos) ── */}
+        {/* ── Photos ── */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-
-          {/* Tab bar */}
-          <div className="flex items-center border-b border-gray-200">
-            <button
-              onClick={() => setLogTab('notes')}
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                logTab === 'notes'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <StickyNote className="h-4 w-4" />
-              Notes
-              {noteEntries.length > 0 && (
-                <span className="ml-0.5 text-xs bg-gray-100 text-gray-600 rounded-full px-1.5 py-0.5 leading-none">
-                  {noteEntries.length}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setLogTab('photos')}
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                logTab === 'photos'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Camera className="h-4 w-4" />
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Camera className="h-4 w-4 text-gray-400" />
               Photos
               {savedPhotos.length > 0 && (
-                <span className="ml-0.5 text-xs bg-gray-100 text-gray-600 rounded-full px-1.5 py-0.5 leading-none">
+                <span className="text-xs font-normal bg-gray-100 text-gray-600 rounded-full px-1.5 py-0.5 leading-none">
                   {savedPhotos.length}
                 </span>
               )}
-            </button>
-
-            {logTab === 'photos' && !selectMode && (
-              <div className="ml-auto pr-5 flex items-center gap-2">
+            </h2>
+            {!selectMode && (
+              <div className="flex items-center gap-2">
+                {savedPhotos.length > 0 && (
+                  <Button
+                    onClick={() => setSelectMode(true)}
+                    size="sm"
+                    variant="outline"
+                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1.5" />
+                    Select
+                  </Button>
+                )}
                 <Button
                   onClick={() => setShowCamera(true)}
                   size="sm"
@@ -647,206 +630,199 @@ export default function JobDetailPage() {
             )}
           </div>
 
-          {/* Notes tab */}
-          {logTab === 'notes' && (
-            <div className="p-6">
-              {/* Add note form */}
-              <div className="mb-6">
-                <textarea
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Add a note, field update, or observation…"
-                  rows={3}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                />
-                <div className="flex justify-end mt-2">
-                  <Button
-                    onClick={handleAddNote}
-                    disabled={noteSaving || !newNote.trim()}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700"
+          <div className="p-6">
+            {/* Selection toolbar (in select mode) */}
+            {selectMode && savedPhotos.length > 0 && (
+              <div className="flex items-center justify-between mb-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSelectAllPhotos}
+                    className="text-sm font-medium text-blue-700 hover:text-blue-800"
                   >
-                    {noteSaving
-                      ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Saving…</>
-                      : <><Plus className="h-3.5 w-3.5 mr-1.5" />Add Note</>
-                    }
-                  </Button>
+                    {selectedPhotoIds.size === savedPhotos.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                  <span className="text-sm text-blue-600">
+                    {selectedPhotoIds.size} of {savedPhotos.length} selected
+                  </span>
                 </div>
-              </div>
-
-              {/* Notes feed */}
-              {noteEntries.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 border-2 border-dashed border-gray-100 rounded-lg">
-                  <StickyNote className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm font-medium">No notes yet</p>
-                  <p className="text-xs mt-1">Add the first note above</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {noteEntries.map((entry) => (
-                    <div key={entry.id} className="flex gap-3">
-                      <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
-                        <User className="h-4 w-4 text-blue-400" />
-                      </div>
-                      <div className="flex-1 bg-gray-50 rounded-lg px-4 py-3 min-w-0">
-                        <p className="text-xs text-gray-400 mb-1.5">{formatDateTime(entry.timestamp)}</p>
-                        <p className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">{entry.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Photos tab */}
-          {logTab === 'photos' && (
-            <div className="p-6">
-              {/* Select button (before entering select mode) */}
-              {!selectMode && savedPhotos.length > 0 && (
-                <div className="mb-4">
+                <div className="flex items-center gap-2">
                   <Button
-                    onClick={() => setSelectMode(true)}
+                    onClick={() => setShowPhotoDeleteConfirm(true)}
+                    disabled={selectedPhotoIds.size === 0}
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                    Delete{selectedPhotoIds.size > 0 ? ` (${selectedPhotoIds.size})` : ''}
+                  </Button>
+                  <Button
+                    onClick={handleExitSelectMode}
                     size="sm"
                     variant="outline"
                     className="text-gray-600 border-gray-300 hover:bg-gray-50"
                   >
-                    <Check className="h-3.5 w-3.5 mr-1.5" />
-                    Select
+                    <X className="h-3.5 w-3.5 mr-1.5" />
+                    Cancel
                   </Button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Selection toolbar (in select mode) */}
-              {selectMode && savedPhotos.length > 0 && (
-                <div className="flex items-center justify-between mb-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleSelectAllPhotos}
-                      className="text-sm font-medium text-blue-700 hover:text-blue-800"
-                    >
-                      {selectedPhotoIds.size === savedPhotos.length ? 'Deselect All' : 'Select All'}
-                    </button>
-                    <span className="text-sm text-blue-600">
-                      {selectedPhotoIds.size} of {savedPhotos.length} selected
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={() => setShowPhotoDeleteConfirm(true)}
-                      disabled={selectedPhotoIds.size === 0}
-                      size="sm"
-                      className="bg-red-600 hover:bg-red-700 disabled:opacity-40"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                      Delete{selectedPhotoIds.size > 0 ? ` (${selectedPhotoIds.size})` : ''}
-                    </Button>
-                    <Button
-                      onClick={handleExitSelectMode}
-                      size="sm"
-                      variant="outline"
-                      className="text-gray-600 border-gray-300 hover:bg-gray-50"
-                    >
-                      <X className="h-3.5 w-3.5 mr-1.5" />
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {savedPhotos.length === 0 ? (
-                <div className="text-center py-14 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
-                  <Camera className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm font-medium">No photos yet</p>
-                  <p className="text-xs mt-1">Tap &quot;Add Photo&quot; or use &quot;Take Photo&quot; to document work</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[...savedPhotos]
-                    .sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime())
-                    .map((photo) => {
-                      const capturedDate = new Date(photo.capturedAt)
-                      const isSelected = selectedPhotoIds.has(photo.id)
-                      return (
-                        <div
-                          key={photo.id}
-                          onClick={selectMode ? () => togglePhotoSelection(photo.id) : undefined}
-                          className={`rounded-lg overflow-hidden bg-gray-100 border-2 shadow-sm transition-all ${
-                            selectMode ? 'cursor-pointer' : ''
-                          } ${
-                            isSelected
-                              ? 'border-blue-500 ring-2 ring-blue-200'
-                              : 'border-gray-200'
-                          }`}
-                        >
-                          {/* Photo image */}
-                          <div className="relative" style={{ aspectRatio: '4/3' }}>
-                            {photo.dataUrl ? (
-                              <img
-                                src={photo.dataUrl}
-                                alt={photo.fileName}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                                <Camera className="h-8 w-8 text-gray-300" />
-                              </div>
-                            )}
-                            {/* Selection checkbox */}
-                            {selectMode && (
-                              <div className="absolute top-2 left-2">
-                                <div
-                                  className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                    isSelected
-                                      ? 'bg-blue-600 border-blue-600'
-                                      : 'bg-white/80 border-gray-300 backdrop-blur-sm'
-                                  }`}
-                                >
-                                  {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
-                                </div>
-                              </div>
-                            )}
-                            {/* GPS badge */}
-                            {photo.location && (
-                              <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
-                                <MapPin className="h-3 w-3" />
-                                GPS
-                              </div>
-                            )}
-                            {/* Selected overlay */}
-                            {isSelected && (
-                              <div className="absolute inset-0 bg-blue-500/10" />
-                            )}
-                          </div>
-
-                          {/* Date & time info bar */}
-                          <div className="px-3 py-2.5 bg-white">
-                            <div className="flex items-center gap-2 text-sm text-gray-700">
-                              <Clock className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                              <span className="font-medium">
-                                {capturedDate.toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                })}
-                              </span>
-                              <span className="text-gray-400">at</span>
-                              <span>
-                                {capturedDate.toLocaleTimeString('en-US', {
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  second: '2-digit',
-                                })}
-                              </span>
+            {savedPhotos.length === 0 ? (
+              <div className="text-center py-14 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+                <Camera className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p className="text-sm font-medium">No photos yet</p>
+                <p className="text-xs mt-1">Tap &quot;Add Photo&quot; or use &quot;Take Photo&quot; to document work</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...savedPhotos]
+                  .sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime())
+                  .map((photo) => {
+                    const capturedDate = new Date(photo.capturedAt)
+                    const isSelected = selectedPhotoIds.has(photo.id)
+                    return (
+                      <div
+                        key={photo.id}
+                        onClick={selectMode ? () => togglePhotoSelection(photo.id) : undefined}
+                        className={`rounded-lg overflow-hidden bg-gray-100 border-2 shadow-sm transition-all ${
+                          selectMode ? 'cursor-pointer' : ''
+                        } ${
+                          isSelected
+                            ? 'border-blue-500 ring-2 ring-blue-200'
+                            : 'border-gray-200'
+                        }`}
+                      >
+                        {/* Photo image */}
+                        <div className="relative" style={{ aspectRatio: '4/3' }}>
+                          {photo.dataUrl ? (
+                            <img
+                              src={photo.dataUrl}
+                              alt={photo.fileName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                              <Camera className="h-8 w-8 text-gray-300" />
                             </div>
+                          )}
+                          {/* Selection checkbox */}
+                          {selectMode && (
+                            <div className="absolute top-2 left-2">
+                              <div
+                                className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  isSelected
+                                    ? 'bg-blue-600 border-blue-600'
+                                    : 'bg-white/80 border-gray-300 backdrop-blur-sm'
+                                }`}
+                              >
+                                {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
+                              </div>
+                            </div>
+                          )}
+                          {/* GPS badge */}
+                          {photo.location && (
+                            <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
+                              <MapPin className="h-3 w-3" />
+                              GPS
+                            </div>
+                          )}
+                          {/* Selected overlay */}
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-blue-500/10" />
+                          )}
+                        </div>
+
+                        {/* Date & time info bar */}
+                        <div className="px-3 py-2.5 bg-white">
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <Clock className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                            <span className="font-medium">
+                              {capturedDate.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </span>
+                            <span className="text-gray-400">at</span>
+                            <span>
+                              {capturedDate.toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                second: '2-digit',
+                              })}
+                            </span>
                           </div>
                         </div>
-                      )
-                    })}
-                </div>
+                      </div>
+                    )
+                  })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Notes ── */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <StickyNote className="h-4 w-4 text-gray-400" />
+              Notes
+              {noteEntries.length > 0 && (
+                <span className="text-xs font-normal bg-gray-100 text-gray-600 rounded-full px-1.5 py-0.5 leading-none">
+                  {noteEntries.length}
+                </span>
               )}
+            </h2>
+          </div>
+          <div className="p-6">
+            {/* Add note form */}
+            <div className="mb-6">
+              <textarea
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                placeholder="Add a note, field update, or observation…"
+                rows={3}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+              <div className="flex justify-end mt-2">
+                <Button
+                  onClick={handleAddNote}
+                  disabled={noteSaving || !newNote.trim()}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {noteSaving
+                    ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Saving…</>
+                    : <><Plus className="h-3.5 w-3.5 mr-1.5" />Add Note</>
+                  }
+                </Button>
+              </div>
             </div>
-          )}
+
+            {/* Notes feed */}
+            {noteEntries.length === 0 ? (
+              <div className="text-center py-10 text-gray-400 border-2 border-dashed border-gray-100 rounded-lg">
+                <StickyNote className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p className="text-sm font-medium">No notes yet</p>
+                <p className="text-xs mt-1">Add the first note above</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {noteEntries.map((entry) => (
+                  <div key={entry.id} className="flex gap-3">
+                    <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <User className="h-4 w-4 text-blue-400" />
+                    </div>
+                    <div className="flex-1 bg-gray-50 rounded-lg px-4 py-3 min-w-0">
+                      <p className="text-xs text-gray-400 mb-1.5">{formatDateTime(entry.timestamp)}</p>
+                      <p className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">{entry.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Actions ── */}
