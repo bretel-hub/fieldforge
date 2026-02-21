@@ -147,6 +147,8 @@ CREATE TABLE IF NOT EXISTS receipts (
 CREATE INDEX IF NOT EXISTS idx_receipts_status ON receipts(status);
 CREATE INDEX IF NOT EXISTS idx_receipts_created_at ON receipts(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_receipts_vendor ON receipts(vendor_name);
+CREATE INDEX IF NOT EXISTS idx_receipts_job_id ON receipts(job_id);
+CREATE INDEX IF NOT EXISTS idx_receipts_job_reference ON receipts(job_reference);
 
 CREATE TRIGGER update_receipts_updated_at
   BEFORE UPDATE ON receipts
