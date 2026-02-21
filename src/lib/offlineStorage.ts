@@ -315,6 +315,11 @@ class OfflineStorageService {
     return this.db!.getAllFromIndex('jobs', 'by-status', status)
   }
 
+  async deleteJob(id: string): Promise<void> {
+    await this.ensureInit()
+    await this.db!.delete('jobs', id)
+  }
+
   // === CUSTOMER OPERATIONS ===
 
   async saveCustomer(customer: Omit<StoredCustomer, 'lastModified'>): Promise<void> {
