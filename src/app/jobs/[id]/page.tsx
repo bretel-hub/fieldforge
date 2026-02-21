@@ -101,8 +101,38 @@ export default function JobDetailPage() {
   useEffect(() => {
     async function loadJob() {
       try {
-        const stored = await offlineStorage.getJob(jobId)
+        let stored = await offlineStorage.getJob(jobId)
         if (stored) {
+          // If job was created from a proposal and customer data is missing, fetch from proposal
+          const missingCustomerData =
+            !stored.customerName ||
+            !stored.customerEmail ||
+            !stored.customerAddress ||
+            !stored.customerContact
+          if (missingCustomerData && stored.id.startsWith('JOB-')) {
+            const proposalId = stored.id.slice(4) // Remove 'JOB-' prefix
+            // Only fetch if it looks like a UUID (not a seed job like JOB-001)
+            if (proposalId.length > 10) {
+              try {
+                const res = await fetch(`/api/proposals/${proposalId}`)
+                const data = await res.json()
+                if (data.success && data.proposal) {
+                  const p = data.proposal
+                  const updated: StoredJob = {
+                    ...stored,
+                    customerName: stored.customerName || p.customer_name || p.customer_contact || '',
+                    customerContact: stored.customerContact || p.customer_contact || '',
+                    customerEmail: stored.customerEmail || p.customer_email || '',
+                    customerAddress: stored.customerAddress || p.customer_address || '',
+                  }
+                  await offlineStorage.saveJob(updated)
+                  stored = updated
+                }
+              } catch {
+                // non-fatal — use whatever data we have
+              }
+            }
+          }
           setJob(stored)
           setStatus(normalizeStatus(stored.status))
         }
