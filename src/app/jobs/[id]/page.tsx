@@ -367,78 +367,78 @@ export default function JobDetailPage() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* ── Proposal Items (collapsible) ── */}
-        {hasItems && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <button
-              onClick={() => setItemsOpen(o => !o)}
-              className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left"
-            >
-              <span className="flex items-center gap-2 text-base font-semibold text-gray-900">
-                <DollarSign className="h-4 w-4 text-gray-400" />
-                Proposal Items
-                <span className="text-xs font-normal text-gray-400">({job.lineItems!.length} line items)</span>
-              </span>
-              {itemsOpen
-                ? <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
-                : <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
-              }
-            </button>
+          {/* ── Proposal Line Items (collapsible) ── */}
+          {hasItems && (
+            <div className="mt-6 -mx-6 -mb-6 border-t border-gray-200">
+              <button
+                onClick={() => setItemsOpen(o => !o)}
+                className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+              >
+                <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                  <DollarSign className="h-4 w-4 text-gray-400" />
+                  Proposal Line Items
+                  <span className="text-xs font-normal text-gray-400">({job.lineItems!.length} items)</span>
+                </span>
+                {itemsOpen
+                  ? <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
+                  : <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
+                }
+              </button>
 
-            {itemsOpen && (
-              <div className="border-t border-gray-100">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100">
-                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Category</th>
-                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Description</th>
-                        <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide w-16">Qty</th>
-                        <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Unit Price</th>
-                        <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {job.lineItems!.map((item) => (
-                        <tr key={item.id} className="hover:bg-gray-50/60">
-                          <td className="px-5 py-3 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[item.category] ?? CATEGORY_COLORS['Other']}`}>
-                              {item.category}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-gray-700">{item.description}</td>
-                          <td className="px-5 py-3 text-right text-gray-700">{item.quantity}</td>
-                          <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(item.unitPrice)}</td>
-                          <td className="px-5 py-3 text-right font-medium text-gray-900">{formatCurrency(item.total)}</td>
+              {itemsOpen && (
+                <div className="border-t border-gray-100">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100">
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Category</th>
+                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Description</th>
+                          <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide w-16">Qty</th>
+                          <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Unit Price</th>
+                          <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Total</th>
                         </tr>
-                      ))}
-                    </tbody>
-                    <tfoot className="border-t-2 border-gray-200">
-                      {job.subtotal != null && (
-                        <tr>
-                          <td colSpan={4} className="px-5 py-2 text-right text-sm text-gray-500">Subtotal</td>
-                          <td className="px-5 py-2 text-right text-sm text-gray-700">{formatCurrency(job.subtotal)}</td>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {job.lineItems!.map((item) => (
+                          <tr key={item.id} className="hover:bg-gray-50/60">
+                            <td className="px-5 py-3 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[item.category] ?? CATEGORY_COLORS['Other']}`}>
+                                {item.category}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-gray-700">{item.description}</td>
+                            <td className="px-5 py-3 text-right text-gray-700">{item.quantity}</td>
+                            <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(item.unitPrice)}</td>
+                            <td className="px-5 py-3 text-right font-medium text-gray-900">{formatCurrency(item.total)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="border-t-2 border-gray-200">
+                        {job.subtotal != null && (
+                          <tr>
+                            <td colSpan={4} className="px-5 py-2 text-right text-sm text-gray-500">Subtotal</td>
+                            <td className="px-5 py-2 text-right text-sm text-gray-700">{formatCurrency(job.subtotal)}</td>
+                          </tr>
+                        )}
+                        {job.taxAmount != null && (
+                          <tr>
+                            <td colSpan={4} className="px-5 py-2 text-right text-sm text-gray-500">Tax</td>
+                            <td className="px-5 py-2 text-right text-sm text-gray-700">{formatCurrency(job.taxAmount)}</td>
+                          </tr>
+                        )}
+                        <tr className="bg-gray-50">
+                          <td colSpan={4} className="px-5 py-3 text-right font-semibold text-gray-900">Total</td>
+                          <td className="px-5 py-3 text-right text-base font-bold text-green-700">{formatCurrency(job.value)}</td>
                         </tr>
-                      )}
-                      {job.taxAmount != null && (
-                        <tr>
-                          <td colSpan={4} className="px-5 py-2 text-right text-sm text-gray-500">Tax</td>
-                          <td className="px-5 py-2 text-right text-sm text-gray-700">{formatCurrency(job.taxAmount)}</td>
-                        </tr>
-                      )}
-                      <tr className="bg-gray-50">
-                        <td colSpan={4} className="px-5 py-3 text-right font-semibold text-gray-900">Total</td>
-                        <td className="px-5 py-3 text-right text-base font-bold text-green-700">{formatCurrency(job.value)}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                      </tfoot>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
 
         {/* ── Job Log (Notes | Photos) ── */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
