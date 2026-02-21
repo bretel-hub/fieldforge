@@ -8,7 +8,7 @@ import {
   Camera, MapPin, User, Loader2, ArrowLeft,
   DollarSign, CheckCircle2, AlertCircle, Save,
   Mail, Phone, ChevronDown, ChevronUp,
-  StickyNote, Plus,
+  StickyNote, Plus, Trash2, Pencil, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PhotoCapture } from '@/lib/cameraService'
@@ -92,6 +92,15 @@ export default function JobDetailPage() {
   const [logTab, setLogTab] = useState<'notes' | 'photos'>('notes')
   const [newNote, setNewNote] = useState('')
   const [noteSaving, setNoteSaving] = useState(false)
+
+  // Editing
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editEstCompletion, setEditEstCompletion] = useState('')
+  const [editTechnician, setEditTechnician] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const loadPhotos = async () => {
     const photos = await offlineStorage.getPhotosByJob(jobId)
@@ -207,6 +216,56 @@ export default function JobDetailPage() {
       console.error('Failed to save note', err)
     } finally {
       setNoteSaving(false)
+    }
+  }
+
+  const handleStartEdit = () => {
+    if (!job) return
+    setEditTitle(job.title)
+    setEditDescription(job.description || '')
+    setEditEstCompletion(job.estimatedCompletion || '')
+    setEditTechnician(job.technicianName || '')
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!job) return
+    setSaving(true)
+    try {
+      const updatedJob: Omit<StoredJob, 'lastModified'> = {
+        ...job,
+        title: editTitle,
+        description: editDescription,
+        estimatedCompletion: editEstCompletion || undefined,
+        technicianName: editTechnician || undefined,
+        syncStatus: 'pending',
+      }
+      await offlineStorage.saveJob(updatedJob)
+      setJob({ ...updatedJob, lastModified: Date.now() })
+      setIsEditing(false)
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } catch (err) {
+      console.error('Failed to save job', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeleteJob = async () => {
+    if (!job) return
+    setDeleting(true)
+    try {
+      await offlineStorage.deleteJob(job.id)
+      router.push('/jobs')
+    } catch (err) {
+      console.error('Failed to delete job', err)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -356,101 +415,173 @@ export default function JobDetailPage() {
             <div className="space-y-4">
               <div>
                 <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Job Title</p>
-                <p className="text-gray-900 font-semibold">{job.title}</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full rounded-md border-gray-300 shadow-sm text-sm"
+                  />
+                ) : (
+                  <p className="text-gray-900 font-semibold">{job.title}</p>
+                )}
               </div>
-              {job.description && (
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Description / Scope of Work</p>
-                  <p className="text-gray-700 whitespace-pre-line leading-relaxed">{job.description}</p>
-                </div>
-              )}
+              <div>
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Description / Scope of Work</p>
+                {isEditing ? (
+                  <textarea
+                    rows={3}
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="w-full rounded-md border-gray-300 shadow-sm text-sm"
+                    placeholder="Scope of work..."
+                  />
+                ) : (
+                  <p className="text-gray-700 whitespace-pre-line leading-relaxed">{job.description || '—'}</p>
+                )}
+              </div>
             </div>
             <div className="space-y-4">
-              {job.estimatedCompletion && (
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Est. Completion</p>
-                  <p className="text-gray-900">{formatDate(job.estimatedCompletion)}</p>
-                </div>
-              )}
-              {job.technicianName && (
-                <div>
-                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Assigned To</p>
-                  <p className="text-gray-900">{job.technicianName}</p>
-                </div>
-              )}
+              <div>
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Est. Completion</p>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={editEstCompletion}
+                    onChange={(e) => setEditEstCompletion(e.target.value)}
+                    className="w-full rounded-md border-gray-300 shadow-sm text-sm"
+                  />
+                ) : (
+                  <p className="text-gray-900">{formatDate(job.estimatedCompletion) || '—'}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Assigned To</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editTechnician}
+                    onChange={(e) => setEditTechnician(e.target.value)}
+                    className="w-full rounded-md border-gray-300 shadow-sm text-sm"
+                    placeholder="Technician name"
+                  />
+                ) : (
+                  <p className="text-gray-900">{job.technicianName || '—'}</p>
+                )}
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* ── Proposal Line Items (collapsible) ── */}
-          {hasItems && (
-            <div className="mt-6 -mx-6 -mb-6 border-t border-gray-200">
-              <button
-                onClick={() => setItemsOpen(o => !o)}
-                className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left"
-              >
-                <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                  <DollarSign className="h-4 w-4 text-gray-400" />
-                  Proposal Line Items
-                  <span className="text-xs font-normal text-gray-400">({job.lineItems!.length} items)</span>
-                </span>
-                {itemsOpen
-                  ? <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
-                  : <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
-                }
-              </button>
+        {/* ── Proposal Line Items (collapsible, own card) ── */}
+        {hasItems && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <button
+              onClick={() => setItemsOpen(o => !o)}
+              className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+            >
+              <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                <DollarSign className="h-4 w-4 text-gray-400" />
+                Proposal Line Items
+                <span className="text-xs font-normal text-gray-400">({job.lineItems!.length} items)</span>
+              </span>
+              {itemsOpen
+                ? <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
+                : <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
+              }
+            </button>
 
-              {itemsOpen && (
-                <div className="border-t border-gray-100">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-gray-100">
-                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Category</th>
-                          <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Description</th>
-                          <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide w-16">Qty</th>
-                          <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Unit Price</th>
-                          <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Total</th>
+            {itemsOpen && (
+              <div className="border-t border-gray-100">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Category</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Description</th>
+                        <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide w-16">Qty</th>
+                        <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Unit Price</th>
+                        <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {job.lineItems!.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50/60">
+                          <td className="px-5 py-3 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[item.category] ?? CATEGORY_COLORS['Other']}`}>
+                              {item.category}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-gray-700">{item.description}</td>
+                          <td className="px-5 py-3 text-right text-gray-700">{item.quantity}</td>
+                          <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(item.unitPrice)}</td>
+                          <td className="px-5 py-3 text-right font-medium text-gray-900">{formatCurrency(item.total)}</td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {job.lineItems!.map((item) => (
-                          <tr key={item.id} className="hover:bg-gray-50/60">
-                            <td className="px-5 py-3 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[item.category] ?? CATEGORY_COLORS['Other']}`}>
-                                {item.category}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3 text-gray-700">{item.description}</td>
-                            <td className="px-5 py-3 text-right text-gray-700">{item.quantity}</td>
-                            <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(item.unitPrice)}</td>
-                            <td className="px-5 py-3 text-right font-medium text-gray-900">{formatCurrency(item.total)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot className="border-t-2 border-gray-200">
-                        {job.subtotal != null && (
-                          <tr>
-                            <td colSpan={4} className="px-5 py-2 text-right text-sm text-gray-500">Subtotal</td>
-                            <td className="px-5 py-2 text-right text-sm text-gray-700">{formatCurrency(job.subtotal)}</td>
-                          </tr>
-                        )}
-                        {job.taxAmount != null && (
-                          <tr>
-                            <td colSpan={4} className="px-5 py-2 text-right text-sm text-gray-500">Tax</td>
-                            <td className="px-5 py-2 text-right text-sm text-gray-700">{formatCurrency(job.taxAmount)}</td>
-                          </tr>
-                        )}
-                        <tr className="bg-gray-50">
-                          <td colSpan={4} className="px-5 py-3 text-right font-semibold text-gray-900">Total</td>
-                          <td className="px-5 py-3 text-right text-base font-bold text-green-700">{formatCurrency(job.value)}</td>
+                      ))}
+                    </tbody>
+                    <tfoot className="border-t-2 border-gray-200">
+                      {job.subtotal != null && (
+                        <tr>
+                          <td colSpan={4} className="px-5 py-2 text-right text-sm text-gray-500">Subtotal</td>
+                          <td className="px-5 py-2 text-right text-sm text-gray-700">{formatCurrency(job.subtotal)}</td>
                         </tr>
-                      </tfoot>
-                    </table>
-                  </div>
+                      )}
+                      {job.taxAmount != null && (
+                        <tr>
+                          <td colSpan={4} className="px-5 py-2 text-right text-sm text-gray-500">Tax</td>
+                          <td className="px-5 py-2 text-right text-sm text-gray-700">{formatCurrency(job.taxAmount)}</td>
+                        </tr>
+                      )}
+                      <tr className="bg-gray-50">
+                        <td colSpan={4} className="px-5 py-3 text-right font-semibold text-gray-900">Total</td>
+                        <td className="px-5 py-3 text-right text-base font-bold text-green-700">{formatCurrency(job.value)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Actions ── */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Job
+            </button>
+          </div>
+          <div className="flex space-x-3">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={saving}
+                  className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleStartEdit}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit
+              </button>
+            )}
+          </div>
         </div>
 
         {/* ── Job Log (Notes | Photos) ── */}
@@ -609,6 +740,39 @@ export default function JobDetailPage() {
         </div>
 
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative z-10 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h2 className="text-base font-semibold text-gray-900">Delete Job</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete this job? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteJob}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCamera && (
         <PhotoCaptureComponent
