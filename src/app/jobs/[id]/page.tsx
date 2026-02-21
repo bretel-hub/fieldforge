@@ -345,6 +345,7 @@ export default function JobDetailPage() {
       if (!data.success) throw new Error(data.error || 'Failed to save receipt')
 
       setReceipts(prev => [data.receipt, ...prev])
+      setReceiptsOpen(true)
       setShowReceiptForm(false)
       setReceiptForm({ vendorName: '', total: '', category: '', notes: '' })
       setReceiptPhoto(null)
@@ -1139,6 +1140,16 @@ export default function JobDetailPage() {
                       ))
                     )}
                   </tbody>
+                  {receipts.length > 0 && (
+                    <tfoot className="border-t-2 border-gray-200">
+                      <tr className="bg-gray-50">
+                        <td colSpan={2} className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Total</td>
+                        <td className="px-4 py-3 text-right text-base font-bold text-green-700 whitespace-nowrap">
+                          {formatCurrency(receipts.reduce((sum, r) => sum + (Number(r.total) || 0), 0))}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  )}
                 </table>
               </div>
             )}
