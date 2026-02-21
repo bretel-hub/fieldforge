@@ -5,11 +5,15 @@ export async function GET(request: NextRequest) {
   try {
     const status = request.nextUrl.searchParams.get('status')
     const jobRef = request.nextUrl.searchParams.get('jobRef')
+    const jobId = request.nextUrl.searchParams.get('jobId')
     let query = supabase.from('receipts').select('*').order('created_at', { ascending: false })
     if (status && status !== 'all') {
       query = query.eq('status', status)
     }
-    if (jobRef) {
+    if (jobId) {
+      // Prefer job_id lookup (stable UUID) with fallback to job_reference text match
+      query = query.or(`job_id.eq.${jobId},job_reference.eq.${jobRef || ''}`)
+    } else if (jobRef) {
       query = query.eq('job_reference', jobRef)
     }
 

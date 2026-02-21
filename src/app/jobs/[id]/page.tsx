@@ -134,11 +134,14 @@ export default function JobDetailPage() {
     setSavedPhotos(photos)
   }
 
-  const loadReceipts = async (jobRef: string) => {
-    if (!jobRef) return
+  const loadReceipts = async (currentJobId: string, jobRef: string) => {
+    if (!currentJobId && !jobRef) return
     setReceiptsLoading(true)
     try {
-      const res = await fetch(`/api/receipts?jobRef=${encodeURIComponent(jobRef)}`)
+      const params = new URLSearchParams()
+      if (currentJobId) params.set('jobId', currentJobId)
+      if (jobRef) params.set('jobRef', jobRef)
+      const res = await fetch(`/api/receipts?${params.toString()}`)
       const data = await res.json()
       if (data.success) {
         setReceipts(data.receipts)
@@ -204,7 +207,7 @@ export default function JobDetailPage() {
         }
         await loadPhotos()
         if (stored) {
-          loadReceipts(stored.jobNumber || stored.title)
+          loadReceipts(stored.id, stored.jobNumber || stored.title)
         }
       } catch (err) {
         console.error('Failed to load job', err)
@@ -329,7 +332,7 @@ export default function JobDetailPage() {
         category: receiptForm.category || null,
         source: receiptPhoto ? 'upload' : 'scan',
         jobReference: jobRef,
-        jobId: null,
+        jobId: job.id,
         notes: receiptForm.notes || null,
         status: 'assigned',
         mediaUrl: receiptPhoto?.preview || null,
@@ -364,6 +367,7 @@ export default function JobDetailPage() {
           source: receiptPhoto ? 'upload' : 'scan',
           status: 'assigned',
           job_reference: jobRef,
+          job_id: job.id,
         }
       }
 
