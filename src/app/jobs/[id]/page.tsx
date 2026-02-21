@@ -103,13 +103,14 @@ export default function JobDetailPage() {
       try {
         let stored = await offlineStorage.getJob(jobId)
         if (stored) {
-          // If job was created from a proposal and customer data is missing, fetch from proposal
+          // If job was created from a proposal, fetch missing customer data and line items
           const missingCustomerData =
             !stored.customerName ||
             !stored.customerEmail ||
             !stored.customerAddress ||
             !stored.customerContact
-          if (missingCustomerData && stored.id.startsWith('JOB-')) {
+          const missingLineItems = !stored.lineItems || stored.lineItems.length === 0
+          if ((missingCustomerData || missingLineItems) && stored.id.startsWith('JOB-')) {
             const proposalId = stored.id.slice(4) // Remove 'JOB-' prefix
             // Only fetch if it looks like a UUID (not a seed job like JOB-001)
             if (proposalId.length > 10) {
@@ -118,12 +119,24 @@ export default function JobDetailPage() {
                 const data = await res.json()
                 if (data.success && data.proposal) {
                   const p = data.proposal
+                  const proposalItems = (p.items || []).map((item: any) => ({
+                    id: item.id,
+                    category: item.category,
+                    description: item.description,
+                    quantity: item.quantity,
+                    unitPrice: item.unit_price,
+                    total: item.total,
+                  }))
                   const updated: StoredJob = {
                     ...stored,
                     customerName: stored.customerName || p.customer_name || p.customer_contact || '',
                     customerContact: stored.customerContact || p.customer_contact || '',
                     customerEmail: stored.customerEmail || p.customer_email || '',
                     customerAddress: stored.customerAddress || p.customer_address || '',
+                    lineItems: stored.lineItems && stored.lineItems.length > 0 ? stored.lineItems : proposalItems.length > 0 ? proposalItems : undefined,
+                    subtotal: stored.subtotal ?? p.subtotal ?? undefined,
+                    taxAmount: stored.taxAmount ?? p.tax_amount ?? undefined,
+                    value: stored.value ?? p.total ?? undefined,
                   }
                   await offlineStorage.saveJob(updated)
                   stored = updated
